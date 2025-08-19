@@ -40,10 +40,10 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping":
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
-print("=== DATABASE FILE IN USE ===")
-print("Relative path:", db_path)
-print("Absolute path:", os.path.abspath(db_path))
-print("============================")
+# print("=== DATABASE FILE IN USE ===")
+# print("Relative path:", db_path)
+# print("Absolute path:", os.path.abspath(db_path))
+# print("============================")
 
 # Initialize SQLAlchemy
 db.init_app(app)
