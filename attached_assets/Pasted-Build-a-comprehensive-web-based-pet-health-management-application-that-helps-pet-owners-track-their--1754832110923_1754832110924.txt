@@ -1,0 +1,105 @@
+Build a comprehensive web-based pet health management application that helps pet owners track their animals' wellness, monitor symptoms, and connect with veterinary care when needed.
+
+Core Features:
+
+Pet Profile Management – Add, edit, delete pet profiles with species, breed, age, and medical notes.
+
+Health History Tracking – Timeline of past symptom checks, image uploads, diagnoses, and recommendations.
+
+Symptom Checker – User selects pet, enters symptoms, and submits. The backend calls Gemini LLM API to generate possible causes, urgency level, and recommendations.
+
+Photo Upload Analysis – User uploads a photo of a visible health issue (rash, wound, etc.) with optional description. Backend sends it to Gemini LLM (mock image handling for now) to return likely conditions.
+
+Wellness Reminders & Scheduling – Add upcoming vaccinations, treatments, and custom reminders. Mark as complete.
+
+Telemedicine Integration (Mock) – Button to “Start Consultation” that would share the pet’s health history with a vet (mock link now, real API later).
+
+Backend Requirements:
+
+Use Python Flask for the backend and SQLAlchemy with SQLite for database.
+
+Create models:
+
+PetProfile (id, name, species, breed, age, medical_notes)
+
+HealthHistory (id, pet_id, date, symptoms, diagnosis, recommendation)
+
+Reminder (id, pet_id, title, due_date, completed)
+
+Routes:
+
+/api/add_pet – Add pet profile
+
+/api/get_pets – List all pets
+
+/api/check_symptoms – Process symptoms via Gemini LLM and return diagnosis
+
+/api/upload_image – Accept photo, call Gemini LLM (mock analysis), return result
+
+/api/get_history – Fetch health history for a pet
+
+/api/add_reminder – Add reminder
+
+/api/get_reminders – List reminders for a pet
+
+Store Gemini API key in .env and keep it secure.
+
+Return all data in JSON format.
+
+Frontend Requirements:
+
+Create separate HTML files:
+
+index.html (Landing Page)
+
+signup.html (Sign Up / Log In – mock for now)
+
+dashboard.html (Main hub)
+
+symptom.html (Symptom Checker)
+
+image.html (Image Upload)
+
+history.html (Health History)
+
+wellness.html (Reminders)
+
+Use fetch() in JavaScript to call the backend routes.
+
+Show AI results dynamically without page reload.
+
+Card-based layout with navigation tabs.
+
+Mobile-first responsive design.
+
+Style Guide:
+
+Colors:
+
+Primary: #4CAF50 (veterinary green)
+
+Secondary: #2196F3 (trust blue)
+
+Accent: #FF9800 (warning orange)
+
+Background: #FAFAFA (soft white)
+
+Text: #333333 (charcoal)
+
+Success: #8BC34A (light green)
+
+Fonts: Inter or Roboto
+
+16px base spacing, rounded corners, gentle shadows
+
+Warm, pet-friendly look inspired by Teladoc & MyFitnessPal
+
+Output:
+
+Complete folder structure: /css, /js, /static/uploads (for images), /templates (Flask HTML if needed), server.py, models.py, .env, requirements.txt
+
+Example Gemini LLM call in the backend
+
+Example fetch() code for symptom submission and displaying results
+
+Ready to run in Replit with flask run

@@ -1,0 +1,113 @@
+<% 
+let body = `
+<div class="card">
+    <div class="card-header text-center">
+        <h3 class="mb-0">
+            <i class="fas fa-edit me-2"></i>
+            Update Email Address
+        </h3>
+    </div>
+    <div class="card-body">
+        ${userEmail ? `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Current email:</strong> ${userEmail}
+            </div>
+        ` : ''}
+        
+        <form id="updateEmailForm">
+            <div class="mb-3">
+                <label for="email" class="form-label">New Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    <input type="email" class="form-control" id="email" name="email" required 
+                           placeholder="your-new-email@example.com" value="${userEmail || ''}">
+                </div>
+                <div class="form-text">
+                    Daily reminders will be sent to this email address at 9:00 AM.
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    Update Email Address
+                </button>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Home
+                </a>
+            </div>
+        </form>
+        
+        ${stats ? `
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="text-center p-3 bg-light rounded">
+                        <i class="fas fa-calendar-alt fa-2x text-primary mb-2"></i>
+                        <h6>Account Created</h6>
+                        <small class="text-muted">
+                            ${stats.createdAt ? new Date(stats.createdAt).toLocaleDateString() : 'Unknown'}
+                        </small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-center p-3 bg-light rounded">
+                        <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                        <h6>Last Updated</h6>
+                        <small class="text-muted">
+                            ${stats.updatedAt ? new Date(stats.updatedAt).toLocaleDateString() : 'Never'}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        ` : ''}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const updateForm = document.getElementById('updateEmailForm');
+    
+    updateForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        submitBtn.disabled = true;
+        
+        try {
+            const response = await makeRequest('/update-email', {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+            
+            if (response.success) {
+                showNotification(response.message, 'success');
+                setTimeout(() => location.href = '/', 1500);
+            } else {
+                showNotification(response.message, 'error');
+            }
+        } catch (error) {
+            showNotification('Failed to update email. Please try again.', 'error');
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+});
+</script>
+`;
+
+let page = 'update';
+let title = 'Update Email - Daily Reminder App';
+%>
+
+<%- include('layout', { body, page, title }) %>

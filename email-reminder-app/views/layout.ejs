@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Daily Reminder App' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 2rem;
+        }
+        .card {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 15px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #48cae4 0%, #0077b6 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .status-badge {
+            font-size: 0.9rem;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h1 class="text-white mb-3">
+                        <i class="fas fa-envelope-circle-check me-2"></i>
+                        Daily Reminder App
+                    </h1>
+                    <p class="text-white-50">Never miss your daily goals with automated email reminders</p>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="navbar navbar-expand-lg navbar-light bg-white rounded-3 mb-4">
+                    <div class="container-fluid">
+                        <div class="navbar-nav mx-auto">
+                            <a class="nav-link <%= (typeof page !== 'undefined' && page === 'home') ? 'active' : '' %>" href="/">
+                                <i class="fas fa-home me-1"></i>Home
+                            </a>
+                            <a class="nav-link <%= (typeof page !== 'undefined' && page === 'update') ? 'active' : '' %>" href="/update-email">
+                                <i class="fas fa-edit me-1"></i>Update Email
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Main Content -->
+                <%- body %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const alertClass = type === 'success' ? 'alert-success' : 
+                             type === 'error' ? 'alert-danger' : 
+                             type === 'warning' ? 'alert-warning' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show notification`;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // API helper function
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                throw new Error('Network error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
