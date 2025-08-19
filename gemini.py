@@ -14,7 +14,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 load_dotenv()
-print("DEBUG: GEMINI_API_KEY =", os.getenv("GEMINI_API_KEY"))
+# print("DEBUG: GEMINI_API_KEY =", os.getenv("GEMINI_API_KEY"))
 
 # Initialize Gemini client
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
