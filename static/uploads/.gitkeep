@@ -1,0 +1,2 @@
+# This file ensures the uploads directory is created and tracked by git
+# The uploads directory is needed for pet health photo uploads

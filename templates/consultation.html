@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterinary Consultation - VetTrack Ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Jitsi Meet API -->
+    <script src="https://meet.jit.si/external_api.js"></script>
+</head>
+
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-paw text-primary me-2"></i>
+                <strong>VetTrack Ai</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-outline-danger btn-sm" onclick="endConsultation()">
+                    <i class="fas fa-phone-slash me-1"></i>End Consultation
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Video Consultation Area -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-video me-2"></i>Veterinary Consultation
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-light text-dark me-2" id="connectionStatus">Connecting...</span>
+                                <div class="consultation-timer">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <span id="consultationTimer">00:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Jitsi Meet Container -->
+                        <div id="jitsi-container" style="height: 600px; width: 100%;">
+                            <!-- Jitsi Meet iframe will be embedded here -->
+                        </div>
+
+                        <!-- Consultation Controls -->
+                        <div class="consultation-controls bg-dark text-white p-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-md text-success me-2"></i>
+                                        <span class="fw-bold">{{ pet.name }}'s Consultation</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <button class="btn btn-primary btn-sm me-2" onclick="shareHealthHistory()">
+                                        <i class="fas fa-share me-1"></i>Share Health History
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="requestRecording()">
+                                        <i class="fas fa-record-vinyl me-1"></i>Request Recording
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <p class="mb-1 text-white">Share this link with your team to join the consultation:</p>
+                        <a href="{{ jitsi_link }}" target="_blank" class="text-info text-break">{{ jitsi_link }}</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pet Information & Health History Sidebar -->
+            <div class="col-lg-4">
+                <!-- Pet Information Card -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-paw me-2"></i>Pet Information
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div class="pet-avatar bg-primary text-white rounded-circle mx-auto mb-2">
+                                <i class="fas fa-paw fa-2x"></i>
+                            </div>
+                            <h5 class="mb-1">{{ pet.name }}</h5>
+                            <p class="text-muted mb-0">{{ pet.species }} • {{ pet.breed }} • {{ pet.age }} years</p>
+                        </div>
+
+                        {% if pet.medical_notes %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">Medical Notes</h6>
+                            <p class="mb-0 small">{{ pet.medical_notes }}</p>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleHealthHistory()">
+                                <i class="fas fa-history me-1"></i>View Health History
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="openSymptomChecker()">
+                                <i class="fas fa-stethoscope me-1"></i>Check Symptoms
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health History Card -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Recent Health History
+                        </h6>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                        <div id="healthHistoryList">
+                            <div class="text-center text-muted py-3">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 mb-0">Loading health history...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consultation Notes -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="fas fa-notes-medical me-2"></i>Consultation Notes
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="consultationNotes" class="form-control" rows="6"
+                            placeholder="Take notes during the consultation..."></textarea>
+                        <div class="mt-2">
+                            <button class="btn btn-success btn-sm save-notes-btn"
+                                data-pet-id="{{ pet.id | default('') }}"
+                                data-consultation-id="{{ consultation.id if consultation else '' }}">
+                                <i class="fas fa-save me-1"></i>Save Notes
+                            </button>
+
+
+
+
+                            <button id="exportSummaryBtn" class="btn btn-outline-primary btn-sm"
+                                data-consultation-id="{{ consultation.id if consultation else '' }}">
+                                <i class="fas fa-download me-1"></i>Export Summary
+                            </button>
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health History Modal -->
+    <div class="modal fade" id="healthHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Complete Health History - {{ pet.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="fullHealthHistory">
+                        <!-- Full health history will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consultation End Confirmation Modal -->
+    <div class="modal fade" id="endConsultationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">End Consultation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to end this consultation?</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Make sure to save any important notes before ending the session.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue
+                        Consultation</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmEndConsultation()">
+                        <i class="fas fa-phone-slash me-1"></i>End Consultation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Consultation variables
+        let api = null;
+        let consultationStartTime = new Date();
+        let timerInterval = null;
+        let petId = "{{ pet.id }}";
+        console.log("Pet ID:", petId);
+        let roomId = "{{ room_id }}";
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeJitsiMeet();
+            loadHealthHistory();
+            startConsultationTimer();
+            loadRecentHistory();
+        });
+
+        document.getElementById('exportSummaryBtn').addEventListener('click', function () {
+            const consultationId = this.dataset.consultationId;
+            if (!consultationId) {
+                alert("Consultation not created yet!");
+                return;
+            }
+            window.open(`/export_summary/${consultationId}`, '_blank');
+        });
+
+        // ------------------ Consultation End ------------------
+        function handleConsultationEnd() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (api) api.dispose();
+            const modal = new bootstrap.Modal(document.getElementById('endConsultationModal'));
+            modal.show();
+        }
+
+        function endConsultation() {
+            handleConsultationEnd();
+        }
+
+        function confirmEndConsultation() {
+            // redirect to home or consultations list after ending
+            window.location.href = "/";
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const saveButtons = document.querySelectorAll('.save-notes-btn');
+
+            saveButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    let petId = Number(btn.dataset.petId);
+                    let consultationId = Number(btn.dataset.consultationId);
+
+                    if (!consultationId) {
+                        alert("Consultation not created yet!");
+                        return;
+                    }
+
+                    const notes = document.getElementById('consultationNotes').value;
+
+                    fetch('/api/save_consultation_notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ consultation_id: consultationId, notes: notes })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) alert('Notes saved successfully!');
+                            else alert('Error saving notes: ' + data.error);
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Unexpected error occurred.');
+                        });
+                });
+            });
+        });
+
+
+
+
+        // ------------------ Jitsi ------------------
+        function initializeJitsiMeet() {
+            const domain = 'meet.jit.si';
+            const roomId = 'MedicalConsultRoom1';
+            const options = {
+                roomName: roomId,
+                width: '100%',
+                height: '600px',
+                parentNode: document.querySelector('#jitsi-container'),
+                userInfo: { displayName: 'Doctor' },
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    enableWelcomePage: false,
+                    prejoinPageEnabled: false,
+                    toolbarButtons: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                        'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
+                        'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
+                        'videoquality', 'filmstrip', 'feedback', 'shortcuts',
+                        'tileview', 'select-background', 'download', 'help', 'mute-everyone'
+                    ]
+                },
+                interfaceConfigOverwrite: {
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    BRAND_WATERMARK_LINK: '',
+                    DEFAULT_BACKGROUND: '#4CAF50'
+                },
+                userInfo: {
+                    displayName: `Pet Owner - ${document.getElementById('petName')?.textContent || '{{ pet.name }}'}`
+                }
+            };
+
+            api = new JitsiMeetExternalAPI(domain, options);
+
+            api.addEventListener('ready', () => updateConnectionStatus('Connected', 'success'));
+            api.addEventListener('participantJoined', (p) => {
+                if (p.displayName.includes('Veterinarian') || p.displayName.includes('Vet')) {
+                    showNotification('Veterinarian has joined the consultation', 'success');
+                }
+            });
+            api.addEventListener('videoConferenceLeft', handleConsultationEnd);
+            api.addEventListener('readyToClose', handleConsultationEnd);
+        }
+
+        function updateConnectionStatus(status, type) {
+            const statusElement = document.getElementById('connectionStatus');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.className = `badge bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'warning'} text-white`;
+            }
+        }
+
+        // ------------------ Timer ------------------
+        function startConsultationTimer() {
+            timerInterval = setInterval(() => {
+                const now = new Date();
+                const elapsed = Math.floor((now - consultationStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                const timer = document.getElementById('consultationTimer');
+                if (timer) {
+                    timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        // ------------------ Health History ------------------
+        async function loadRecentHistory() {
+            const box = document.getElementById("recentHistoryBox");
+            if (!box) return;
+
+            try {
+                const res = await fetch(`/api/pet/${petId}/recent-history?limit=5`);
+                const json = await res.json();
+                if (!json.success || !json.health_history.length) {
+                    box.innerHTML = '<div class="text-muted p-3">No recent history.</div>';
+                    return;
+                }
+
+                box.innerHTML = json.health_history.map(h => `
+                <div class="border-bottom p-2">
+                  <div><strong>${new Date(h.date).toLocaleString()}</strong></div>
+                  <div><em>Symptoms:</em> ${h.symptoms}</div>
+                  <div><em>Diagnosis:</em> ${h.diagnosis}</div>
+                  <div><em>Recommendation:</em> ${h.recommendation}</div>
+                </div>
+            `).join("");
+
+            } catch (e) {
+                box.innerHTML = '<div class="text-danger p-3">Error loading health history</div>';
+                console.error(e);
+            }
+        }
+
+        async function loadHealthHistory() {
+            const container = document.getElementById('healthHistoryList');
+            if (!container) return;
+
+            container.innerHTML = `
+        <div class="text-center text-muted py-3">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <p class="mt-2 mb-0">Loading health history...</p>
+        </div>
+    `;
+
+            try {
+                const response = await fetch(`/api/get_history?pet_id=${petId}`);
+                const data = await response.json();
+
+                if (!data.success || data.history.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-3">No health history available</div>';
+                    return;
+                }
+
+                const recentHistory = data.history.slice(0, 5); // last 5 records
+
+                container.innerHTML = recentHistory.map(record => `
+            <div class="border-bottom p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-1 text-primary">${record.symptoms}</h6>
+                    <small class="text-muted">${new Date(record.date).toLocaleDateString()}</small>
+                </div>
+                <p class="small text-muted mb-1">${truncateText(record.diagnosis, 100)}</p>
+                <button class="btn btn-outline-primary btn-xs" onclick="showRecordInModal(${record.id})">
+                    <i class="fas fa-eye me-1"></i>Details
+                </button>
+            </div>
+        `).join('');
+
+            } catch (error) {
+                container.innerHTML = '<div class="text-center text-danger py-3">Error loading health history</div>';
+                console.error(error);
+            }
+        }
+
+
+        function showRecordInModal(recordId) {
+            fetch(`/api/get_history?pet_id=${petId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const record = data.history.find(r => r.id === recordId);
+                        if (!record) return;
+                        const container = document.getElementById('fullHealthHistory');
+                        container.innerHTML = `
+                        <div class="card mb-3">
+                            <div class="card-header"><h6>${new Date(record.date).toLocaleString()}</h6></div>
+                            <div class="card-body">
+                                <h6>Symptoms</h6><p>${record.symptoms}</p>
+                                <h6>Analysis</h6><p>${record.diagnosis}</p>
+                                <h6>Recommendations</h6><p>${record.recommendation}</p>
+                            </div>
+                        </div>
+                    `;
+                        const modal = new bootstrap.Modal(document.getElementById('healthHistoryModal'));
+                        modal.show();
+                    }
+                });
+        }
+
+        function openSymptomChecker() {
+            const petId = "{{ pet.id }}";
+            // Redirect and optionally pre-select pet
+            window.location.href = `/symptom?pet_id=${petId}`;
+        }
+
+
+        function toggleHealthHistory() {
+            fetch(`/api/get_history?pet_id=${petId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        displayFullHealthHistory(data.history);
+                        const modal = new bootstrap.Modal(document.getElementById('healthHistoryModal'));
+                        modal.show();
+                    }
+                });
+        }
+
+
+        function saveNotes(petId, consultationId) {
+            if (!consultationId) {
+                alert("Consultation not created yet!");
+                return;
+            }
+            const notes = document.getElementById('consultationNotes').value;
+
+            fetch('/api/save_consultation_notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ consultation_id: consultationId, notes: notes })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) alert('Notes saved successfully!');
+                    else alert('Error saving notes: ' + data.error);
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Unexpected error occurred.');
+                });
+        }
+        function displayFullHealthHistory(history) {
+            const container = document.getElementById('fullHealthHistory');
+            if (!container || !history.length) {
+                container.innerHTML = '<div class="text-center text-muted py-4">No health history available</div>';
+                return;
+            }
+
+            container.innerHTML = history.map((record, index) => {
+                const date = new Date(record.date);
+                const formattedDate = date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
+                return `
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6>Record #${history.length - index} - ${formattedDate}</h6>
+        </div>
+        <div class="card-body">
+            <h6 class="text-primary">Symptoms</h6>
+            <p class="bg-light p-2 rounded">${record.symptoms}</p>
+            <h6 class="text-primary">Analysis</h6>
+            <p class="bg-light p-2 rounded">${record.diagnosis}</p>
+            <h6 class="text-primary">Recommendations</h6>
+            <p class="bg-light p-2 rounded">${record.recommendation}</p>
+        </div>
+    </div>
+    `;
+            }).join('');
+        }
+
+        // ------------------ Helpers ------------------
+        function truncateText(text, maxLength) {
+            return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
+        }
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) clearInterval(timerInterval);
+            if (api) api.dispose();
+        });
+
+    </script>
+
+
+
+</body>
+
+</html>

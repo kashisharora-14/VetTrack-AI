@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - VetTrack Ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav id="customNavbar" class="navbar navbar-expand-lg navbar-light py-3 shadow-sm rounded">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='paw.webp') }}" alt="" style="height: 50px; width: auto;">
+                VetTrack AI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+
+                    {% if user %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ user.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-dark rounded-pill ms-3 px-4" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-section="overview">
+                                <i class="fas fa-tachometer-alt me-2"></i>Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="pets">
+                                <i class="fas fa-paw me-2"></i>My Pets
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('symptom') }}">
+                                <i class="fas fa-stethoscope me-2"></i>Symptom Checker
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('image') }}">
+                                <i class="fas fa-camera me-2"></i>Photo Analysis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('history') }}">
+                                <i class="fas fa-history me-2"></i>Health History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('wellness') }}">
+                                <i class="fas fa-calendar-alt me-2"></i>Wellness
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <a href="{{ url_for('symptom') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-stethoscope me-2 text-primary"></i>Check Symptoms
+                                </a>
+                                <a href="{{ url_for('image') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-camera me-2 text-secondary"></i>Analyze Photo
+                                </a>
+                                <a href="{{ url_for('wellness') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-calendar-plus me-2 text-success"></i>Add Reminder
+                                </a>
+                                <button class="list-group-item list-group-item-action" onclick="startConsultation()">
+                                    <i class="fas fa-video me-2 text-info"></i>Start Consultation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Overview Section -->
+                <div id="overview-section" class="section">
+                    <div
+                        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Dashboard Overview</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#addPetModal">
+                                <i class="fas fa-plus me-1"></i>Add New Pet
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total
+                                                Pets</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalPets">0</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-paw fa-2x text-primary"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Health Records</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalRecords">0
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Pending Reminders</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingReminders">0
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-bell fa-2x text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Consultations</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">Available</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-video fa-2x text-info"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Health History</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mb-0">
+                                    <thead class="table text-center">
+                                        <tr>
+                                            <th>Pet ID</th>
+                                            <th>Date</th>
+                                            <th>Symptoms / Analysis</th>
+                                            <th>Diagnosis</th>
+                                            <th>Recommendation</th>
+                                            <th>Urgency Level</th>
+                                            <th>Possible Causes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in health_history %}
+                                        <tr>
+                                            <td class="text-center">{{ record.pet_id }}</td>
+                                            <td>{{ record.date }}</td>
+                                            <td>{{ record.symptoms }}</td>
+                                            <!-- Diagnosis -->
+                                            <td>
+                                                {% if record.diagnosis %}
+                                                <ul class="mb-0 ps-3">
+                                                    {% for d in record.diagnosis %}
+                                                    <li>{{ d }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% else %}
+                                                —
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ record.recommendation }}</td>
+
+                                            <!-- Urgency Level Badge -->
+                                            <td class="text-center">
+                                                {% if record.urgency_level %}
+                                                {% set level = record.urgency_level.lower() %}
+                                                {% if level == 'high' %}
+                                                <span class="badge bg-danger">High</span>
+                                                {% elif level == 'medium' %}
+                                                <span class="badge bg-warning text-dark">Medium</span>
+                                                {% elif level == 'low' %}
+                                                <span class="badge bg-success">Low</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">{{ record.urgency_level }}</span>
+                                                {% endif %}
+                                                {% else %}
+                                                —
+                                                {% endif %}
+                                            </td>
+
+                                            <!-- Possible Causes Tags -->
+                                            <!-- Possible Causes -->
+                                            <td>
+                                                {% if record.possible_causes %}
+                                                <ul class="mb-0 ps-3">
+                                                    {% for cause in record.possible_causes if cause %}
+                                                    <li>{{ cause }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% else %}
+                                                —
+                                                {% endif %}
+                                            </td>
+
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!-- Pets Section -->
+                <div id="pets-section" class="section" style="display: none;">
+                    <div
+                        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">My Pets</h1>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addPetModal">
+                            <i class="fas fa-plus me-1"></i>Add New Pet
+                        </button>
+                    </div>
+
+                    <div id="petsContainer" class="row">
+                        <!-- Pets will be loaded here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- Add Pet Modal -->
+    <div class="modal fade" id="addPetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Pet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPetForm">
+                        <div class="mb-3">
+                            <label for="petName" class="form-label">Pet Name</label>
+                            <input type="text" class="form-control" id="petName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="petSpecies" class="form-label">Species</label>
+                            <select class="form-select" id="petSpecies" required>
+                                <option value="">Select species</option>
+                                <option value="dog">Dog</option>
+                                <option value="cat">Cat</option>
+                                <option value="bird">Bird</option>
+                                <option value="rabbit">Rabbit</option>
+                                <option value="hamster">Hamster</option>
+                                <option value="fish">Fish</option>
+                                <option value="reptile">Reptile</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="petBreed" class="form-label">Breed</label>
+                            <input type="text" class="form-control" id="petBreed" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="petAge" class="form-label">Age (years)</label>
+                            <input type="number" class="form-control" id="petAge" min="0" max="50" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="petNotes" class="form-label">Medical Notes</label>
+                            <textarea class="form-control" id="petNotes" rows="3"
+                                placeholder="Any existing conditions, allergies, or important notes..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addPet()">Add Pet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+ <script>
+    // Run on dashboard load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadDashboardData();
+        loadPets('petsContainer');   // default load for My Pets
+    });
+
+    // Section navigation
+    document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const section = this.dataset.section;
+
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+
+            // Show/hide sections
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.getElementById(section + '-section').style.display = 'block';
+
+            // Load pets when "My Pets" section is opened
+            if (section === 'pets') {
+                loadPets('petsContainer');
+            }
+            // Example: if you add another section later
+            if (section === 'my-pets') {
+                loadPets('myPetsContainer');
+            }
+        });
+    });
+
+    // Dashboard counters
+    function loadDashboardData() {
+        // Pets count
+        fetch('/api/get_pets')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalPets').textContent = data.pets.length;
+                }
+            });
+
+        // Pending reminders count
+        fetch('/api/get_reminders')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const pending = data.reminders.filter(r => !r.completed).length;
+                    document.getElementById('pendingReminders').textContent = pending;
+                }
+            });
+
+        // Health history count
+        fetch('/api/get_health_history')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalRecords').textContent = data.health_history.length;
+                }
+            });
+    }
+
+    // Load pets into a specific container
+    function loadPets(containerId) {
+        fetch('/api/get_pets')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayPets(data.pets, containerId);
+                }
+            });
+    }
+
+    // Display pets in given container
+    function displayPets(pets, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (pets.length === 0) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-paw fa-4x mb-3"></i>
+                        <h3>No pets added yet</h3>
+                        <p>Add your first pet to start tracking their health</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPetModal">
+                            <i class="fas fa-plus me-1"></i>Add Your First Pet
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = pets.map(pet => `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">${pet.name}</h5>
+                            <span class="badge bg-primary">${pet.species}</span>
+                        </div>
+                        <p class="card-text">
+                            <strong>Breed:</strong> ${pet.breed}<br>
+                            <strong>Age:</strong> ${pet.age} years
+                        </p>
+                        ${pet.medical_notes ? `<p class="card-text text-muted"><small>${pet.medical_notes}</small></p>` : ''}
+                        <div class="btn-group w-100">
+                            <a href="/consultation/${pet.id}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-video me-1"></i>Consult
+                            </a>
+                            <a href="/history?pet_id=${pet.id}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-history me-1"></i>History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Add pet
+    function addPet() {
+        const form = document.getElementById('addPetForm');
+        const petData = {
+            name: document.getElementById('petName').value,
+            species: document.getElementById('petSpecies').value,
+            breed: document.getElementById('petBreed').value,
+            age: parseInt(document.getElementById('petAge').value),
+            medical_notes: document.getElementById('petNotes').value
+        };
+
+        fetch('/api/add_pet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(petData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and refresh pets
+                bootstrap.Modal.getInstance(document.getElementById('addPetModal')).hide();
+                form.reset();
+                loadPets('petsContainer');   // refresh My Pets
+                loadDashboardData();
+                showNotification('Pet added successfully!', 'success');
+            } else {
+                showNotification('Error adding pet: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error adding pet: ' + error.message, 'error');
+        });
+    }
+
+    // Start consultation
+    function startConsultation() {
+        fetch('/api/get_pets')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.pets.length > 0) {
+                    if (data.pets.length === 1) {
+                        window.location.href = `/consultation/${data.pets[0].id}`;
+                    } else {
+                        showPetSelectionModal(data.pets, 'consultation');
+                    }
+                } else {
+                    showNotification('Please add a pet first before starting a consultation.', 'warning');
+                }
+            });
+    }
+
+    // Pet selection modal
+    function showPetSelectionModal(pets, action) {
+        const modalHtml = `
+            <div class="modal fade" id="petSelectionModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Select Pet</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Which pet would you like to ${action === 'consultation' ? 'consult about' : 'manage'}?</p>
+                            <div class="list-group">
+                                ${pets.map(pet => `
+                                    <button class="list-group-item list-group-item-action" onclick="selectPet(${pet.id}, '${action}')">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">${pet.name}</h6>
+                                                <small class="text-muted">${pet.species} • ${pet.breed} • ${pet.age} years</small>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-muted"></i>
+                                        </div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('petSelectionModal'));
+        modal.show();
+
+        document.getElementById('petSelectionModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+    }
+
+    function selectPet(petId, action) {
+        bootstrap.Modal.getInstance(document.getElementById('petSelectionModal')).hide();
+        if (action === 'consultation') {
+            window.location.href = `/consultation/${petId}`;
+        }
+    }
+</script>
+
+</body>
+
+</html>
