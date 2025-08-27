@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetTrack Ai - Comprehensive Pet Health Management</title>
+
+    <style>
+        :root {
+            --soft-blue: #e9f2ff;
+            --soft-blue-text: #2563eb;
+            --soft-green: #e8f7ef;
+            --soft-green-text: #059669;
+            --soft-purple: #f3e8ff;
+            --soft-purple-text: #7c3aed;
+            --soft-red: #fff1f0;
+            --soft-red-text: #dc2626;
+            --soft-yellow: #fff7ed;
+            --soft-yellow-text: #d97706;
+            --soft-info: #eef7ff;
+            --soft-info-text: #0891b2;
+        }
+
+        /* card container */
+        .feature-card {
+            border-radius: 14px;
+            overflow: hidden;
+            transition: transform 240ms ease, box-shadow 240ms ease;
+            -webkit-backface-visibility: hidden;
+            will-change: transform;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 30px rgba(12, 38, 75, 0.08);
+        }
+
+        /* Add glow effect */
+        .feature-card:hover {
+            box-shadow: 0 18px 30px rgba(12, 38, 75, 0.08), 0 0 15px 5px rgba(79, 197, 246, 0.6); /* Blue glow */
+        }
+
+        /* ensure content stretches and button stays at bottom */
+        .feature-card .card-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 230px;
+            padding: 1.6rem;
+        }
+
+        /* circle icon */
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 30%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 6px 16px rgba(16, 36, 66, 0.06);
+        }
+
+        /* text */
+        .feature-card .card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+            color: #0f172a;
+            /* dark */
+            text-align: center;
+        }
+
+        .feature-card .card-text {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            text-align: center;
+            margin-bottom: 0.6rem;
+        }
+
+        /* small outline button */
+        .feature-cta {
+            border-radius: 8px;
+            padding: .5rem .9rem;
+            font-size: .92rem;
+            border-width: 1px;
+            width: 120px;
+            text-align: center;
+        }
+
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            /* semi-transparent white */
+            border-radius: 20px !important;
+            /* more rounded corners */
+            backdrop-filter: blur(8px);
+            /* optional: glassy blur effect */
+            transition: background-color 0.3s ease;
+        }
+
+        .highlight {
+            color: #ff69b4;
+            /* Pink highlight */
+            text-decoration: underline;
+            text-decoration-color: #ff69b4;
+        }
+
+        .navbar-nav .nav-link {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* pastel backgrounds for icons */
+        .icon-blue {
+            background: var(--soft-blue);
+            color: var(--soft-blue-text);
+        }
+
+        .icon-green {
+            background: var(--soft-green);
+            color: var(--soft-green-text);
+        }
+
+        .icon-purple {
+            background: var(--soft-purple);
+            color: var(--soft-purple-text);
+        }
+
+        .icon-red {
+            background: var(--soft-red);
+            color: var(--soft-red-text);
+        }
+
+        .icon-yellow {
+            background: var(--soft-yellow);
+            color: var(--soft-yellow-text);
+        }
+
+        .icon-info {
+            background: var(--soft-info);
+            color: var(--soft-info-text);
+        }
+
+        #customNavbar {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 20px !important;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Enhanced navbar scroll effect */
+        #customNavbar.scrolled {
+            background-color: rgba(255, 255, 255, 0.98) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(25px);
+        }
+
+
+        /* Enhanced animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0%, 20%, 53%, 80%, to {
+                animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+                transform: translateZ(0);
+            }
+            0%, 20% {
+                opacity: 0;
+                transform: scale3d(0.3, 0.3, 0.3);
+            }
+            53% {
+                opacity: 1;
+                transform: scale3d(1.05, 1.05, 1.05);
+            }
+            80% {
+                transform: scale3d(0.9, 0.9, 0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale3d(1, 1, 1);
+            }
+        }
+
+        .feature-card {
+            animation: slideInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+        .feature-card:nth-child(5) { animation-delay: 0.5s; }
+        .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+        /* Enhanced modal styling */
+        .modal-content {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .btn-primary, .btn-outline-primary {
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-outline-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+        }
+
+        /* Enhanced feature icon animations */
+        .feature-icon {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* responsive adjustments (optional) */
+        @media (min-width: 992px) {
+            .feature-card .card-body {
+                min-height: 250px;
+            }
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation -->
+<nav id="customNavbar" class="navbar navbar-expand-lg navbar-light py-3 shadow-sm rounded">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-4" href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='paw.webp') }}" alt="VetTrack AI Logo" style="height: 50px; width: auto;">
+            VetTrack AI
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="#" onclick="checkAuthAndRedirect('/dashboard')">Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+
+                {% if user %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                           data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ user.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-dark rounded-pill ms-3 px-4" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+
+    <!-- Hero Section -->
+    <section class="position-relative overflow-hidden">
+        <!-- Enhanced Animated Background -->
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 25%, #81D4FA 50%, #4FC3F7 75%, #29B6F6 100%); z-index: 1;"></div>
+
+        <!-- Enhanced Floating Elements with More Paws -->
+        <div class="position-absolute" style="top: 8%; left: 8%; z-index: 2;">
+            <i class="fa-solid fa-paw text-white opacity-30 pulse" style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="top: 15%; right: 12%; z-index: 2;">
+            <i class="fa-solid fa-paw text-pink opacity-25 pulse" style="font-size: 1.8rem; animation-delay: 0.3s; color: #FF69B4; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="top: 25%; left: 15%; z-index: 2;">
+            <i class="fa-solid fa-heart text-danger opacity-30 pulse" style="font-size: 1.6rem; animation-delay: 0.6s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="top: 35%; right: 8%; z-index: 2;">
+            <i class="fa-solid fa-paw text-success opacity-25 pulse" style="font-size: 2rem; animation-delay: 0.9s; color: #00C853; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="bottom: 35%; left: 12%; z-index: 2;">
+            <i class="fa-solid fa-paw text-warning opacity-30 pulse" style="font-size: 1.9rem; animation-delay: 1.2s; color: #FFA726; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="top: 50%; right: 20%; z-index: 2;">
+            <i class="fa-solid fa- stethoscope text-info opacity-25 pulse" style="font-size: 1.4rem; animation-delay: 1.5s; color: #26C6DA; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="bottom: 25%; right: 15%; z-index: 2;">
+            <i class="fa-solid fa-paw text-purple opacity-25 pulse" style="font-size: 1.7rem; animation-delay: 1.8s; color: #AB47BC; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="top: 70%; left: 25%; z-index: 2;">
+            <i class="fa-solid fa-paw text-indigo opacity-30 pulse" style="font-size: 1.5rem; animation-delay: 2.1s; color: #5C6BC0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="bottom: 45%; left: 5%; z-index: 2;">
+            <i class="fa-solid fa-paw text-teal opacity-25 pulse" style="font-size: 2.1rem; animation-delay: 2.4s; color: #26A69A; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+        <div class="position-absolute" style="top: 45%; left: 35%; z-index: 2;">
+            <i class="fa-solid fa-paw text-orange opacity-20 pulse" style="font-size: 1.3rem; animation-delay: 2.7s; color: #FF7043; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
+        </div>
+
+        <div class="container position-relative py-5" style="z-index: 3;">
+            <div class="text-center py-5">
+                <div class="fade-in">
+                    <span class="badge px-4 py-3 rounded-pill mb-4" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); color: white; font-size: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <i class="fas fa-sparkles me-2"></i>Advanced AI-Powered Pet Care
+                    </span>
+                    <h1 class="display-4 fw-bold mb-4" style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                        Your reliable partner for pet <span style="background: linear-gradient(135deg, #FFD700 0%, #FF69B4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: none;">wellness</span>
+                    </h1>
+                    <p class="lead mb-5 mx-auto" style="max-width: 700px; color: rgba(255,255,255,0.95); font-size: 1.2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                        At VetTrack AI, we prioritize the health and happiness of your beloved pets.
+                        Our advanced AI technology and expert veterinary network provide comprehensive care solutions.
+                    </p>
+                    <div class="d-flex justify-content-center gap-4 mb-5">
+                        <a href="#" onclick="checkAuthAndRedirect('/signup')" class="btn btn-lg px-5 py-3 fw-bold border-0 shadow-lg"
+                           style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); border-radius: 50px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                            <i class="fas fa-heart me-2"></i>Get Started Today
+                        </a>
+                        <a href="#" onclick="checkAuthAndRedirect('/dashboard')" class="btn btn-outline-light btn-lg px-5 py-3 fw-bold border-2 btn-explore-services"
+                           style="border-radius: 50px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.8);">
+                            <i class="fas fa-compass me-2"></i>Explore Services
+                        </a>
+                    </div>
+
+
+
+                    <!-- Pet Images with better spacing -->
+                    <div class="row g-4 mt-5 pt-4">
+                        <div class="col-md-4">
+                            <div class="rounded-4 overflow-hidden shadow-lg hover-scale">
+                                <img src="/static/dog1.jpg" alt="Happy Dog" class="img-fluid w-100" style="height: 280px; object-fit: cover;">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="rounded-4 overflow-hidden shadow-lg hover-scale">
+                                <img src="/static/dog2.jpg" alt="Cute Cat" class="img-fluid w-100" style="height: 280px; object-fit: cover;">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="rounded-4 overflow-hidden shadow-lg hover-scale">
+                                <img src="/static/dog3.jpg" alt="Pet Care" class="img-fluid w-100" style="height: 280px; object-fit: cover;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-surface">
+        <div class="container">
+            <div class="text-center mb-5 fade-in">
+                <span class="badge bg-secondary-light text-secondary px-3 py-2 rounded-pill mb-3">
+                    <i class="fas fa-star me-2"></i>Feature-Rich Platform
+                </span>
+                <h2 class="display-5 fw-bold mb-4">Comprehensive Pet Care Features</h2>
+                <p class="lead text-muted mx-auto" style="max-width: 900px;">
+                    Everything you need to keep your pets healthy and happy — simple, modern tools powered by intelligent AI technology.
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <!-- card 1 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <div class="feature-icon icon-blue mb-3 mx-auto">
+                                    <i class="fas fa-stethoscope fa-lg"></i>
+                                </div>
+                                <h5 class="card-title">AI Symptom Checker</h5>
+                                <p class="card-text">Get instant analysis of your pet's symptoms with our advanced AI
+                                    technology powered by Gemini LLM.</p>
+                            </div>
+
+                            <div>
+                                <a href="#" onclick="checkAuthAndRedirect('/symptom')" class="btn btn-outline-primary feature-cta glow-btn">Try Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- card 2 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <div class="feature-icon icon-green mb-3 mx-auto">
+                                    <i class="fas fa-camera fa-lg"></i>
+                                </div>
+                                <h5 class="card-title">Photo Analysis</h5>
+                                <p class="card-text">Upload photos of visible health issues for AI-powered visual
+                                    diagnosis and recommendations.</p>
+                            </div>
+
+                            <div>
+                                <a href="#" onclick="checkAuthAndRedirect('/image')" class="btn btn-outline-success feature-cta glow-btn">Try Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- card 3 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <div class="feature-icon icon-purple mb-3 mx-auto">
+                                    <i class="fas fa-video fa-lg"></i>
+                                </div>
+                                <h5 class="card-title">Telemedicine</h5>
+                                <p class="card-text">Connect with veterinarians through secure video consultations with
+                                    complete health history sharing.</p>
+                            </div>
+
+                            <div>
+                                <a href="#" onclick="checkAuthAndRedirect('/dashboard')" class="btn btn-outline-info feature-cta glow-btn">Try Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- card 4 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <div class="feature-icon icon-red mb-3 mx-auto">
+                                    <i class="fas fa-chart-line fa-lg"></i>
+                                </div>
+                                <h5 class="card-title">Health Tracking</h5>
+                                <p class="card-text">Maintain comprehensive health records with timeline tracking and
+                                    historical data analysis.</p>
+                            </div>
+
+                            <div>
+                                <a href="#" onclick="checkAuthAndRedirect('/dashboard')" class="btn btn-outline-danger feature-cta glow-btn">Try Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- card 5 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <div class="feature-icon icon-yellow mb-3 mx-auto">
+                                    <i class="fas fa-bell fa-lg"></i>
+                                </div>
+                                <h5 class="card-title">Wellness Reminders</h5>
+                                <p class="card-text">Never miss vaccinations, treatments, or check-ups with smart
+                                    reminder scheduling.</p>
+                            </div>
+
+                            <div>
+                                <a href="#" onclick="checkAuthAndRedirect('/wellness')" class="btn btn-outline-warning feature-cta glow-btn">Try Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- card 6 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <div class="feature-icon icon-info mb-3 mx-auto">
+                                    <i class="fas fa-paw fa-lg"></i>
+                                </div>
+                                <h5 class="card-title">Pet Profiles</h5>
+                                <p class="card-text">Manage multiple pets with detailed profiles including breed, age,
+                                    and medical history.</p>
+                            </div>
+
+                            <div>
+                                <a href="#" onclick="checkAuthAndRedirect('/dashboard')" class="btn btn-outline-info feature-cta glow-btn">Try Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- row -->
+        </div> <!-- container -->
+    </section>
+
+
+
+    <!-- About Section -->
+    <section id="about" class="py-5 bg-light">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="display-5 fw-bold mb-4">Trusted by Pet Owners Worldwide</h2>
+                    <p class="lead mb-4">VetTrack Ai combines cutting-edge AI technology with veterinary expertise to
+                        provide comprehensive health management for your beloved pets.</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> AI-powered symptom analysis</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Secure telemedicine
+                            consultations</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Comprehensive health tracking
+                        </li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Smart wellness reminders</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="about-image-placeholder bg-white rounded-4 p-5 shadow">
+                        <i class="fas fa-shield-heart display-1 text-primary mb-3"></i>
+                        <img src="{{ url_for('static', filename='herodog.webp') }}" alt=""
+                            style="height: 300px; width: auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3f51b5 50%, #5c6bc0 75%, #7986cb 100%); min-height: 70vh; display: flex; align-items: center;">
+        <!-- Dark overlay for better contrast -->
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0, 0, 0, 0.3); z-index: 1;"></div>
+
+        <!-- Enhanced Floating paw decorations with better visibility -->
+        <div class="position-absolute" style="top: 10%; left: 10%; z-index: 2;">
+            <i class="fa-solid fa-paw pulse" style="font-size: 3rem; color: rgba(255, 255, 255, 0.2); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+        </div>
+        <div class="position-absolute" style="bottom: 15%; right: 15%; z-index: 2;">
+            <i class="fa-solid fa-paw pulse" style="font-size: 2.5rem; color: rgba(255, 255, 255, 0.2); animation-delay: 1s; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+        </div>
+        <div class="position-absolute" style="top: 60%; left: 5%; z-index: 2;">
+            <i class="fa-solid fa-paw pulse" style="font-size: 2rem; color: rgba(255, 255, 255, 0.2); animation-delay: 0.5s; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+        </div>
+        <div class="position-absolute" style="top: 30%; right: 8%; z-index: 2;">
+            <i class="fa-solid fa-heart pulse" style="font-size: 1.8rem; color: rgba(255, 105, 180, 0.4); animation-delay: 1.5s; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+        </div>
+
+        <div class="container text-center position-relative text-white" style="z-index: 3;">
+            <div class="fade-in">
+                <span class="badge px-4 py-3 rounded-pill mb-4" style="background: rgba(255,255,255,0.15); color: white; font-size: 1rem; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    <i class="fas fa-rocket me-2"></i>Transform Pet Care Today
+                </span>
+                <h2 class="display-4 fw-bold mb-4" style="color: white; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); letter-spacing: -0.5px;">Ready to Transform Your Pet's Healthcare?</h2>
+                <p class="lead mb-5 mx-auto" style="max-width: 700px; font-size: 1.25rem; color: rgba(255,255,255,0.95); text-shadow: 2px 2px 4px rgba(0,0,0,0.4); line-height: 1.6;">Join thousands of pet owners who trust VetTrack AI for comprehensive pet wellness management with cutting-edge AI technology</p>
+                <div class="d-flex justify-content-center gap-4 flex-wrap">
+                    <a href="#" onclick="checkAuthAndRedirect('/signup')" class="btn btn-lg px-5 py-3 hover-lift shadow" style="background: linear-gradient(135deg, #ff4757 0%, #ff6b7a 50%, #ff8097 100%); border: none; color: white; border-radius: 50px; font-weight: 600; box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4); transition: all 0.3s ease; font-size: 1.1rem;">
+                        <i class="fas fa-rocket me-2"></i>Get Started Today
+                    </a>
+                    <a href="#" onclick="checkAuthAndRedirect('/dashboard')" class="btn btn-lg px-5 py-3 hover-lift" style="background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.8); color: white; border-radius: 50px; backdrop-filter: blur(15px); transition: all 0.3s ease; font-weight: 600; font-size: 1.1rem;">
+                        <i class="fas fa-compass me-2"></i>Explore Features
+                    </a>
+                </div>
+
+                <!-- Enhanced trust indicators with glass morphism -->
+                <div class="row justify-content-center text-center mt-5">
+                    <div class="col-12">
+                        <div class="trust-indicators-container d-flex justify-content-center flex-wrap gap-3">
+                            <span class="trust-pill glass-pill">
+                                <i class="fas fa-brain me-2"></i>AI-Powered Analysis
+                            </span>
+                            <span class="trust-pill glass-pill">
+                                <i class="fas fa-users me-2"></i>Trusted by Pet Owners
+                            </span>
+                            <span class="trust-pill glass-pill">
+                                <i class="fas fa-heart me-2"></i>Always Here for Your Pet
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3 text-white">
+                        <img src="{{ url_for('static', filename='paw.webp') }}" alt="" style="height: 30px; width: auto;" class="me-2">
+                        VetTrack AI
+                    </h5>
+                    <p class="text-light mb-3">Your trusted partner in pet healthcare. Advanced AI technology meets veterinary expertise to keep your beloved pets healthy and happy.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-light hover-text-primary"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light hover-text-primary"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light hover-text-primary"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light hover-text-primary"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-semibold mb-3 text-white">Services</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('dashboard') }}" class="text-light text-decoration-none hover-text-primary">AI Symptom Checker</a></li>
+                        <li class="mb-2"><a href="{{ url_for('dashboard') }}" class="text-light text-decoration-none hover-text-primary">Photo Analysis</a></li>
+                        <li class="mb-2"><a href="{{ url_for('dashboard') }}" class="text-light text-decoration-none hover-text-primary">Telemedicine</a></li>
+                        <li class="mb-2"><a href="{{ url_for('dashboard') }}" class="text-light text-decoration-none hover-text-primary">Health Tracking</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-semibold mb-3 text-white">Company</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#about" class="text-light text-decoration-none hover-text-primary">About Us</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">Terms of Service</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-semibold mb-3 text-white">Support</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">Help Center</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">Documentation</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">Community</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none hover-text-primary">24/7 Support</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <hr class="my-4 opacity-25">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="text-light mb-0">&copy; 2025 VetTrack AI. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-light mb-0">Made with <i class="fas fa-heart text-danger"></i> for pet lovers everywhere</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        window.onload = function () {
+            window.scrollTo(0, 0);
+        };
+
+        // Enhanced navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('customNavbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+                navbar.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                navbar.classList.remove('scrolled');
+                navbar.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+
+                // Skip empty hash, just '#', or invalid selectors
+                if (!href || href === '#' || href.length <= 1) {
+                    return;
+                }
+
+                // Validate that it's a proper ID selector
+                if (!/^#[a-zA-Z][\w-]*$/.test(href)) {
+                    return;
+                }
+
+                try {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                } catch (error) {
+                    // Invalid selector, skip silently
+                    return;
+                }
+            });
+        });
+    </script>
+
+    <!-- Custom Modal for Authentication -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-header border-0 text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem;">
+                    <div class="w-100">
+                        <i class="fas fa-lock fa-3x mb-3 opacity-75"></i>
+                        <h4 class="modal-title fw-bold mb-0" id="authModalLabel">Authentication Required</h4>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center px-5 py-4">
+                    <div class="mb-4">
+                        <i class="fas fa-user-shield fa-2x text-primary mb-3"></i>
+                        <p class="lead mb-3" style="color: #6c757d;">You need to be logged in to access this feature</p>
+                        <p class="text-muted">Join thousands of pet owners who trust VetTrack AI for comprehensive pet care</p>
+                    </div>
+
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="/login" class="btn btn-primary btn-lg px-4 py-2 rounded-pill">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                        <a href="/signup" class="btn btn-outline-primary btn-lg px-4 py-2 rounded-pill">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light text-center py-3">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Your data is secure and protected
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkAuthAndRedirect(targetUrl) {
+            // Check if user is logged in by looking for user data in the template
+            const isLoggedIn = {{ 'true' if user else 'false' }};
+
+            if (isLoggedIn) {
+                // User is logged in, redirect to the target page
+                window.location.href = targetUrl;
+            } else {
+                // User is not logged in, show beautiful modal
+                const authModal = new bootstrap.Modal(document.getElementById('authModal'));
+                authModal.show();
+
+                // Store the target URL for potential redirect after login
+                sessionStorage.setItem('redirectAfterLogin', targetUrl);
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

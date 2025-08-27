@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Analysis - VetTrackAi</title>
+    <style>
+        .likelihood-badge {
+            white-space: normal !important;
+            /* allow multi-line */
+            text-align: left;
+            display: inline-block;
+            /* expands naturally */
+            max-width: 100%;
+            /* prevent overflow */
+            line-height: 1.4;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-paw text-primary me-2"></i>
+                <strong>VetTrackAi</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-camera text-primary display-4 mb-3"></i>
+                        <h1 class="h2 fw-bold">AI Photo Analysis</h1>
+                        <p class="text-muted">Upload a photo of your pet's health concern for AI-powered visual analysis
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Upload Form -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Pet Photo</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="imageForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="petSelect" class="form-label">Select Pet</label>
+                                <select class="form-select" id="petSelect" name="pet_id" required>
+                                    <option value="">Choose your pet...</option>
+                                </select>
+                                <div class="form-text">
+                                    Don't see your pet?
+                                    <a href="{{ url_for('dashboard') }}" target="_blank">Add a new pet</a> first.
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label for="imageFile" class="form-label">Photo Upload</label>
+                                    <input type="file" class="form-control" id="imageFile" name="image" accept="image/*"
+                                        required>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle text-info me-1"></i>
+                                        Supported formats: JPG, PNG, WEBP. Maximum size: 16MB
+                                    </div>
+                                </div>
+
+                                <!-- Image Preview -->
+                                <div id="imagePreview" class="mb-3" style="display: none;">
+                                    <label class="form-label">Photo Preview</label>
+                                    <div class="text-center">
+                                        <img id="previewImg" src="" alt="Preview" class="img-fluid rounded"
+                                            style="max-height: 300px;">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description (Optional)</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"
+                                        placeholder="Describe what you're concerned about in the photo. For example: 'Red rash on belly', 'Strange bump on leg', 'Eye discharge', etc."></textarea>
+                                    <div class="form-text">
+                                        <i class="fas fa-lightbulb text-warning me-1"></i>
+                                        Adding a description helps the AI provide more accurate analysis.
+                                    </div>
+                                </div>
+
+                                <!-- Photo Tips -->
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading"><i class="fas fa-camera me-2"></i>Photo Tips for Best
+                                        Analysis
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li>Ensure good lighting and clear focus</li>
+                                        <li>Get close enough to show the area of concern clearly</li>
+                                        <li>Take multiple angles if needed</li>
+                                        <li>Avoid blurry or dark photos</li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-robot me-2"></i>Analyze Photo
+                                    </button>
+                                </div>
+                        </form>
+
+                        <!-- Loading State -->
+                        <div id="loadingState" class="text-center py-4" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Analyzing...</span>
+                            </div>
+                            <p class="mt-2 text-muted">AI is analyzing the photo...</p>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="card shadow-sm mt-4" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-eye me-2"></i>AI Visual Analysis Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-image text-primary me-2"></i>Analyzed Photo</h6>
+                                <img id="analyzedImage" src="" alt="Analyzed photo" class="img-fluid rounded mb-3">
+                            </div>
+                            <div class="col-md-6">
+                                <div id="resultsContent">
+                                    <!-- Results will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Important
+                                Disclaimer</h6>
+                            <p class="small mb-0">This AI visual analysis is for informational purposes only and should
+                                not replace professional veterinary examination. Please consult with a qualified
+                                veterinarian for accurate diagnosis and treatment.</p>
+                        </div>
+
+                        <div class="mt-3 d-flex gap-2">
+                            <button class="btn btn-success" onclick="startConsultation()">
+                                <i class="fas fa-video me-1"></i>Schedule Consultation
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="analyzeAnotherPhoto()">
+                                <i class="fas fa-camera me-1"></i>Analyze Another Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- High Severity Notice -->
+                <div id="severityNotice" class="alert alert-warning mt-4" style="display: none;">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Concerning Findings</h5>
+                    <p class="mb-0">The analysis suggests this condition may require veterinary attention. Please
+                        consider scheduling a consultation or contacting your veterinarian.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnosis Explanation Modal -->
+    <div class="modal fade" id="diagnosisExplanationModal" tabindex="-1"
+        aria-labelledby="diagnosisExplanationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="diagnosisExplanationModalLabel">Diagnosis Explanation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="diagnosisExplanationContent">
+                    <!-- Explanation will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadPetsForSelect();
+        });
+
+        function loadPetsForSelect() {
+            fetch('/api/get_pets')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('petSelect');
+                        select.innerHTML = '<option value="">Choose your pet...</option>';
+                        data.pets.forEach(pet => {
+                            select.innerHTML += `<option value="${pet.id}">${pet.name} (${pet.species})</option>`;
+                        });
+                    }
+                });
+        }
+
+        // Image preview functionality
+        const imageFileInput = document.getElementById('imageFile');
+        if (imageFileInput) {
+            imageFileInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewImg = document.getElementById('previewImg');
+                        const imagePreview = document.getElementById('imagePreview');
+                        if (previewImg && imagePreview) {
+                            previewImg.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    const imagePreview = document.getElementById('imagePreview');
+                    if (imagePreview) {
+                        imagePreview.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        const imageForm = document.getElementById('imageForm');
+        if (imageForm) {
+            imageForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const petId = document.getElementById('petSelect').value;
+                const imageFile = document.getElementById('imageFile').files[0];
+
+                if (!petId || !imageFile) {
+                    showNotification('Please select a pet and upload an image', 'warning');
+                    return;
+                }
+
+                if (imageFile.size > 16 * 1024 * 1024) {
+                    showNotification('Image file is too large. Maximum size is 16MB.', 'error');
+                    return;
+                }
+
+                // Show loading state
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('loadingState').style.color = '#007bff';
+                document.getElementById('resultsSection').style.display = 'none';
+                document.getElementById('severityNotice').style.display = 'none';
+
+                // Safety timeout (force hide after 20s)
+                let spinnerTimeout = setTimeout(() => {
+                    console.log("Safety timeout: forcing spinner hide...");
+                    document.getElementById('loadingState').style.display = 'none';
+                }, 20000);
+
+                fetch('/api/upload_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => {
+                        console.log("Status:", response.status);
+                        return response.text(); // Just to see the raw output
+                    })
+                    .then(text => {
+                        console.log("Raw server response:", text);
+                        try {
+                            const data = JSON.parse(text);
+                            if (data.success) {
+                                displayResults(data.analysis, data.image_url);
+                            } else {
+                                showNotification('Error analyzing image: ' + data.error, 'error');
+                            }
+                        } catch (e) {
+                            console.error("JSON parse error:", e);
+                            showNotification("Server did not return valid JSON", "error");
+                        }
+                    })
+                    .catch(error => {
+                        showNotification('Error analyzing image: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        document.getElementById('loadingState').style.display = 'none';
+
+                        const button = document.querySelector('#imageForm button[type="submit"]');
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = button.getAttribute('data-original-text');
+                        }
+                    });
+            });
+        }
+
+        function displayResults(analysis, imageUrl) {
+            const resultsContent = document.getElementById('resultsContent');
+
+            // Normalize input
+            const diagnosis = Array.isArray(analysis.diagnosis)
+                ? analysis.diagnosis
+                : analysis.diagnosis
+                    ? [analysis.diagnosis]
+                    : [];
+
+            const recommendation = analysis.recommendation || 'Not available';
+            const severity = analysis.severity || 'Not Assessed';
+            const likelihood = analysis.condition_likelihood || analysis.conditionLikelihood || "Unknown";
+            const urgency = analysis.urgency_level || "Not Specified";
+
+            // 🔹 Separate warning from diagnoses
+            const warningItem = diagnosis.find(d =>
+                d.toLowerCase().startsWith("warning:") ||
+                d.toLowerCase().startsWith("species mismatch")
+            );
+
+            const cleanDiagnosis = diagnosis.filter(d =>
+                !d.toLowerCase().startsWith("warning:") &&
+                !d.toLowerCase().startsWith("species mismatch")
+            );
+
+
+            // Grouping
+            const mostLikely = cleanDiagnosis.filter(d => d.toLowerCase().startsWith("most likely"));
+            const possibleCauses = cleanDiagnosis.filter(d => d.toLowerCase().startsWith("possible"));
+            const lessLikely = cleanDiagnosis.filter(d => d.toLowerCase().startsWith("less likely"));
+            const otherNotes = cleanDiagnosis.filter(d =>
+                !d.toLowerCase().startsWith("most likely") &&
+                !d.toLowerCase().startsWith("possible") &&
+                !d.toLowerCase().startsWith("less likely")
+            );
+
+            // Severity color
+            const severityColors = { 'Mild': 'success', 'Moderate': 'warning', 'Severe': 'danger', 'High': 'danger', 'Critical': 'danger' };
+            const severityColor = severityColors[severity] || 'secondary';
+
+            // Likelihood color
+            const likelihoodColors = { 'Very Likely': 'danger', 'Likely': 'warning', 'Possible': 'info', 'Unlikely': 'success', 'Concerning': 'warning' };
+            const likelihoodColor = likelihoodColors[likelihood] || 'secondary';
+
+            // Urgency color
+            const urgencyColors = { 'High': 'danger', 'Medium': 'warning', 'Low': 'success' };
+            const urgencyColor = urgencyColors[urgency] || 'secondary';
+
+            // Build HTML
+            resultsContent.innerHTML = `
+        <!-- Warning -->
+        ${warningItem ? `<div class="alert alert-warning mb-3"><i class="fas fa-exclamation-triangle me-2"></i>${warningItem}</div>` : ""}
+
+        <!-- Diagnosis Section -->
+        <h6><i class="fas fa-eye text-success me-2"></i>AI Diagnosis</h6>
+
+      ${mostLikely.length ? `<h6 class="mt-2 text-primary">Most Likely</h6><ul class="list-group list-group-flush mb-2">${mostLikely.map(d => `<li class="list-group-item px-0"><a href="#" class="text-decoration-none" onclick="showDiagnosisExplanation('${d.replace(/'/g, "\\'")}'); return false;">${d} <i class="fas fa-info-circle text-muted ms-1"></i></a></li>`).join('')}</ul>` : ''}
+
+${(possibleCauses.length || analysis.possible_causes?.length) ? `
+    <h6 class="mt-2">
+        <i class="fas fa-list-ul text-primary me-2"></i>Possible Causes
+    </h6>
+    <p class="text-muted">These are potential underlying causes for the observed condition:</p>
+    <ul class="list-group list-group-flush mb-2">
+        ${[...new Set([...possibleCauses, ...(analysis.possible_causes || [])])]
+                        .map(c => `<li class="list-group-item px-0">
+                          <i class="fas fa-angle-right text-muted me-2"></i>${c.replace(/^possible\s*/i, '')}
+                       </li>`)
+                        .join('')}
+    </ul>` : ''}
+
+
+        <!-- Urgency -->
+        <h6><i class="fas fa-bolt text-danger me-2"></i>Urgency Level</h6>
+        <span class="badge bg-${urgencyColor} fs-6 mb-3">${urgency}</span>
+
+<!-- Likelihood -->
+<h6><i class="fas fa-chart-bar text-info me-2"></i>Condition Likelihood</h6>
+<span class="badge bg-${likelihoodColor} fs-6 mb-3 likelihood-badge">
+  ${likelihood}
+</span>
+
+        <!-- Severity -->
+        <h6><i class="fas fa-thermometer-half text-warning me-2"></i>Severity Assessment</h6>
+        <span class="badge bg-${severityColor} fs-6 mb-3">${severity}</span>
+
+        <!-- Recommendation -->
+        <h6><i class="fas fa-clipboard-list text-success me-2"></i>Recommendations</h6>
+        <div class="bg-light p-3 rounded">${recommendation}</div>
+
+        ${lessLikely.length ? `<h6 class="mt-2 text-secondary">Less Likely</h6><ul class="list-group list-group-flush mb-2">${lessLikely.map(d => `<li class="list-group-item px-0"><a href="#" class="text-decoration-none" onclick="showDiagnosisExplanation('${d.replace(/'/g, "\\'")}'); return false;">${d} <i class="fas fa-info-circle text-muted ms-1"></i></a></li>`).join('')}</ul>` : ''}
+
+        ${otherNotes.length ? `<h6 class="mt-2">Other Findings</h6><ul class="list-group list-group-flush mb-2">${otherNotes.map(d => `<li class="list-group-item px-0"><a href="#" class="text-decoration-none" onclick="showDiagnosisExplanation('${d.replace(/'/g, "\\'")}'); return false;">${d} <i class="fas fa-info-circle text-muted ms-1"></i></a></li>`).join('')}</ul>` : ''}
+    `;
+
+            // Show image + results
+            document.getElementById('analyzedImage').src = imageUrl;
+            document.getElementById('resultsSection').style.display = 'block';
+
+            // Critical warning
+            document.getElementById('severityNotice').style.display =
+                (severity === 'Severe' || severity === 'Critical' || likelihood === 'Very Likely' || urgency === 'High')
+                    ? 'block'
+                    : 'none';
+
+            // Scroll
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startConsultation() {
+            const petId = document.getElementById('petSelect').value;
+            if (petId) {
+                window.location.href = `/consultation/${petId}`;
+            } else {
+                showNotification('Please select a pet first', 'warning');
+            }
+        }
+
+        function analyzeAnotherPhoto() {
+            document.getElementById('imageForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('severityNotice').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Use the global showDiagnosisExplanation function from app.js
+        function startConsultationFromExplanation() {
+            const petId = document.getElementById('petSelect').value;
+            if (petId) {
+                window.location.href = `/consultation/${petId}`;
+            } else {
+                showNotification('Please select a pet first', 'warning');
+            }
+        }
+
+        // Placeholder for showNotification function if it's not defined elsewhere
+        function showNotification(message, type) {
+            console.log(`Notification (${type}): ${message}`);
+            // In a real app, you'd have a UI element to display these notifications.
+            // For example, using a toast component from Bootstrap or a custom implementation.
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+
+    </script>
+</body>
+
+</html>

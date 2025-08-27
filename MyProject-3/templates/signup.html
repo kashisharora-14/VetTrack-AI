@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - VetTrack Ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-paw text-primary me-2"></i>
+                <strong>VetTrack Ai</strong>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Sign Up Form -->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow border-0">
+                    <div class="card-body p-5">
+                        <div id="signupSection">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-user-plus text-primary display-4 mb-3"></i>
+                                <h2 class="fw-bold">Create Account</h2>
+                                <p class="text-muted">Join VetTrack Ai to start managing your pet's health</p>
+                            </div>
+                        </div>
+
+                        <!-- Display messages -->
+                        {% if error %}
+                        <div class="alert alert-danger">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+                        {% if success %}
+                        <div class="alert alert-success">
+                            {{ success }}
+                        </div>
+                        {% endif %}
+                        {% if login_error %}
+                        <div class="alert alert-danger">
+                            {{ login_error }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Signup Form -->
+                        <form action="{{ url_for('signup') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" name="fullName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                                    required>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#"
+                                        class="text-primary">Privacy Policy</a>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
+                        </form>
+
+                        <div class="text-center">
+                            <p class="text-muted">Already have an account? <a href="{{ url_for('login') }}" class="text-primary">Log In</a>
+</p>
+                        </div>
+
+                        <!-- Login Form (Initially Hidden) -->
+                        <!-- <div id="loginForm" style="display: none;">
+                            <div class="text-center mb-4">
+                                <h2 class="fw-bold">Welcome Back</h2>
+                                <p class="text-muted">Log in to your VetTrack Ai account</p>
+                            </div>
+
+                            <form action="{{ url_for('login') }}" method="POST">
+                                <div class="mb-3">
+                                    <label for="loginEmail" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="loginEmail" name="email" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="loginPassword" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="loginPassword" name="password"
+                                        required>
+                                </div>
+
+
+
+                                <button type="submit" class="btn btn-primary w-100 mb-3">Log In</button>
+                            </form>
+
+                            <div class="text-center">
+                                <p class="text-muted">Don't have an account? <a href="#" class="text-primary"
+                                        id="signupLink">Create Account</a></p>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JS for toggling forms -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginLink = document.getElementById("loginLink");
+            const signupLink = document.getElementById("signupLink");
+            const signupSection = document.getElementById("signupSection");
+            const loginForm = document.getElementById("loginForm");
+
+            if (loginLink) {
+                loginLink.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    if (signupSection) signupSection.style.display = "none";
+                    if (loginForm) loginForm.style.display = "block";
+                });
+            }
+
+            if (signupLink) {
+                signupLink.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    if (signupSection) signupSection.style.display = "block";
+                    if (loginForm) loginForm.style.display = "none";
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

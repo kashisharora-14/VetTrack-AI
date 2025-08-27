@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health History - VetTrack Ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            max-width: 250px;
+        }
+
+        .record-filter button.active {
+            font-weight: bold;
+        }
+
+        .card {
+            cursor: pointer;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-paw text-primary me-2"></i>
+                <strong>VetTrack Ai</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-paw me-2"></i>Select Pet</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="petsList" class="list-group list-group-flush"></div>
+                    </div>
+                </div>
+
+                <!-- Record Type Filter -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Record Type</h6>
+                    </div>
+                    <div class="card-body record-filter d-flex flex-column">
+                        <button class="btn btn-outline-primary mb-2 active" data-type="reminder">Reminders</button>
+                        <button class="btn btn-outline-success mb-2" data-type="consultation">Consultations</button>
+                        <button class="btn btn-outline-primary" data-type="health">Health</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-history text-primary display-4 mb-3"></i>
+                        <h1 class="h2 fw-bold">Health History</h1>
+                        <p class="text-muted">Timeline of your pet's health records and AI analyses</p>
+                    </div>
+                </div>
+
+                <div id="historyContainer">
+                    <div id="noSelectionMessage" class="text-center text-muted py-5">
+                        <i class="fas fa-arrow-left fa-3x mb-3"></i>
+                        <h4>Select a Pet</h4>
+                        <p>Choose a pet from the sidebar to view their health history</p>
+                    </div>
+
+                    <div id="historyCards" class="row g-3" style="display: none;"></div>
+                    <div id="noHistoryMessage" class="text-center text-muted py-5" style="display: none;">
+                        <i class="fas fa-clipboard fa-3x mb-3"></i>
+                        <h4>No Records</h4>
+                        <p>This pet has no records for the selected type.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="recordModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="recordDetails"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="startConsultationFromModal()">
+                        <i class="fas fa-video me-1"></i>Discuss with Vet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPetId = null;
+        let currentType = "reminder";
+        let timelineData = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const petsList = document.getElementById("petsList");
+            const historyCards = document.getElementById("historyCards");
+            const noSelectionMessage = document.getElementById("noSelectionMessage");
+            const noHistoryMessage = document.getElementById("noHistoryMessage");
+
+            // Load pets
+            async function loadPets() {
+                petsList.innerHTML = `<div class="p-3 text-muted">Loading...</div>`;
+                try {
+                    const response = await fetch("/api/get_pets");
+                    const result = await response.json();
+                    petsList.innerHTML = "";
+                    result.pets.forEach(pet => {
+                        const btn = document.createElement("button");
+                        btn.className = "list-group-item list-group-item-action";
+                        btn.textContent = pet.name;
+                        btn.onclick = () => selectPet(pet);
+                        petsList.appendChild(btn);
+                    });
+                } catch (err) {
+                    petsList.innerHTML = `<p class="text-danger p-3">Failed to load pets</p>`;
+                }
+            }
+
+            function selectPet(pet) {
+                currentPetId = pet.id;
+                noSelectionMessage.style.display = "none";
+                historyCards.style.display = "flex";
+                document.querySelectorAll("#petsList button").forEach(btn => btn.classList.remove("active"));
+                event.currentTarget?.classList.add("active");
+                loadPetHistory();
+            }
+
+            async function loadPetHistory() {
+                if (!currentPetId) return;
+                try {
+                    const response = await fetch(`/api/pet/${currentPetId}/full-history`);
+                    const data = await response.json();
+                    timelineData = data.timeline;
+                    renderCards();
+                } catch (err) {
+                    historyCards.innerHTML = `<p class="text-danger">Failed to load history</p>`;
+                }
+            }
+
+            function renderCards() {
+                const filtered = timelineData.filter(r => r.type === currentType);
+                historyCards.innerHTML = "";
+
+                if (!filtered.length) {
+                    noHistoryMessage.style.display = "block";
+                    return;
+                } else {
+                    noHistoryMessage.style.display = "none";
+                }
+
+                filtered.forEach(record => {
+                    const col = document.createElement("div");
+                    col.className = "col-md-6";
+
+                    const card = document.createElement("div");
+                    card.className = "card shadow-sm p-3";
+                    card.onclick = () => {
+                        document.getElementById("recordDetails").innerHTML = generateRecordHTML(record);
+                        document.getElementById("recordModal").dataset.petId = currentPetId;
+                        new bootstrap.Modal(document.getElementById("recordModal")).show();
+                    };
+
+                    card.innerHTML = generateRecordHTML(record, true);
+                    col.appendChild(card);
+                    historyCards.appendChild(col);
+                });
+            }
+
+            function generateRecordHTML(record, brief = false) {
+                let html = `<div class="mb-1"><strong>Date:</strong> ${new Date(record.date).toLocaleString()}</div>`;
+
+                if (record.type === "health") {
+                    html += `<span class="badge bg-primary mb-2">Health</span>`;
+                    html += `<div><strong>Symptoms:</strong> ${record.symptoms}</div>`;
+                    if (!brief) html += `<div><strong>Diagnosis:</strong> ${record.diagnosis}</div>`;
+                    if (!brief) html += `<div><strong>Recommendation:</strong> ${record.recommendation}</div>`;
+                    if (!brief) html += `<div><strong>Urgency:</strong> ${record.urgency_level || "—"}</div>`;
+                } else if (record.type === "consultation") {
+                    html += `<span class="badge bg-success mb-2">Consultation</span>`;
+                    html += `<div><strong>Summary:</strong> ${record.summary || "—"}</div>`;
+                } else if (record.type === "reminder") {
+                    html += `<span class="badge bg-warning text-dark mb-2">Reminder</span>`;
+                    html += `<div><strong>Title:</strong> ${record.title}</div>`;
+                    html += `<div><strong>Completed:</strong> ${record.completed ? "Yes" : "No"}</div>`;
+                }
+
+                return html;
+            }
+
+            // Record type filter buttons
+            document.querySelectorAll(".record-filter button").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    currentType = btn.dataset.type;
+                    document.querySelectorAll(".record-filter button").forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    renderCards();
+                });
+            });
+
+            loadPets();
+        });
+
+        function startConsultationFromModal() {
+            const recordModalEl = document.getElementById('recordModal');
+            const petId = recordModalEl.dataset.petId;
+            if (petId) window.location.href = `/consultation/${petId}`;
+            else alert("Pet ID not found for this record.");
+        }
+
+        function exportHistory() {
+            alert("Export functionality not yet implemented.");
+        }
+
+        function addQuickEntry() {
+            alert("Add Entry functionality not yet implemented.");
+        }
+
+        function filterHistory() {
+            alert("Filter functionality not yet implemented.");
+        }
+
+        function clearHistory() {
+            alert("Clear All functionality not yet implemented.");
+        }
+    </script>
+</body>
+</html>

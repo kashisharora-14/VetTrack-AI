@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellness Tracker - VetTrack Ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-paw text-primary me-2"></i>
+                <strong>VetTrack Ai</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calendar-heart text-success display-4 mb-3"></i>
+                        <h1 class="h2 fw-bold">Wellness Tracker</h1>
+                        <p class="text-muted">Keep track of your pet's preventive care schedule and health milestones</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-syringe text-primary display-6 mb-3"></i>
+                                <h5>Vaccination</h5>
+                                <button class="btn btn-primary btn-sm" onclick="addReminder('vaccination')">
+                                    <i class="fas fa-plus me-1"></i>Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-cut text-info display-6 mb-3"></i>
+                                <h5>Grooming</h5>
+                                <button class="btn btn-info btn-sm" onclick="addReminder('grooming')">
+                                    <i class="fas fa-plus me-1"></i>Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-stethoscope text-success display-6 mb-3"></i>
+                                <h5>Checkup</h5>
+                                <button class="btn btn-success btn-sm" onclick="addReminder('checkup')">
+                                    <i class="fas fa-plus me-1"></i>Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Reminders -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Upcoming Reminders</h5>
+                        <button class="btn btn-light btn-sm" onclick="showAddReminderModal()">
+                            <i class="fas fa-plus me-1"></i>Add Reminder
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="remindersContainer">
+                            <!-- Reminders will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Insights -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Health Insights</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-heart text-success me-2"></i>
+                                    <h6>Last Checkup</h6>
+                                </div>
+                                <p class="text-muted" id="lastCheckupText">Never</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-syringe text-info me-2"></i>
+                                    <h6>Vaccination Status</h6>
+                                </div>
+                                <p class="text-muted" id="vaccinationStatusText">Up to date</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-chart-bar text-warning me-2"></i>
+                                    <h6>Wellness Score</h6>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 85%" id="wellnessProgress"></div>
+                                </div>
+                                <small class="text-muted" id="wellnessScoreText">85% - Based on preventive care compliance</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Pet Selector -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Select Pet</h6>
+                    </div>
+                    <div class="card-body">
+                        <select class="form-select" id="petSelect" onchange="loadWellnessData()">
+                            <option value="">All Pets</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Calendar Widget -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>This Month</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="miniCalendar">
+                            <!-- Simple calendar will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Wellness Tips</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="fas fa-water text-info me-2 mt-1"></i>
+                            <small>Ensure fresh water is always available</small>
+                        </div>
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="fas fa-running text-success me-2 mt-1"></i>
+                            <small>Regular exercise keeps pets healthy and happy</small>
+                        </div>
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-tooth text-warning me-2 mt-1"></i>
+                            <small>Brush your pet's teeth regularly</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Reminder Modal -->
+    <div class="modal fade" id="addReminderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Wellness Reminder</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reminderForm">
+                        <div class="mb-3">
+                            <label for="reminderPet" class="form-label">Select Pet</label>
+                            <select class="form-select" id="reminderPet" required>
+                                <option value="">Choose your pet...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reminderType" class="form-label">Reminder Type</label>
+                            <select class="form-select" id="reminderType" required>
+                                <option value="">Select type...</option>
+                                <option value="vaccination">Vaccination</option>
+                                <option value="grooming">Grooming</option>
+                                <option value="checkup">Vet Checkup</option>
+                                <option value="medication">Medication</option>
+                                <option value="flea_treatment">Flea Treatment</option>
+                                <option value="deworming">Deworming</option>
+                                <option value="nail_trimming">Nail Trimming</option>
+                                <option value="dental_care">Dental Care</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reminderTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="reminderTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reminderDate" class="form-label">Due Date</label>
+                            <input type="datetime-local" class="form-control" id="reminderDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reminderNotes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="reminderNotes" rows="3" placeholder="Additional notes or instructions..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveReminder()">Save Reminder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPetsForWellness();
+            loadReminders();
+            loadWellnessInsights();
+            generateMiniCalendar(); // Generate calendar on page load
+        });
+
+        function loadPetsForWellness() {
+            fetch('/api/get_pets')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const selects = ['petSelect', 'reminderPet'];
+                        selects.forEach(selectId => {
+                            const select = document.getElementById(selectId);
+                            if (selectId === 'petSelect') {
+                                select.innerHTML = '<option value="">All Pets</option>';
+                            } else {
+                                select.innerHTML = '<option value="">Choose your pet...</option>';
+                            }
+                            data.pets.forEach(pet => {
+                                select.innerHTML += `<option value="${pet.id}">${pet.name} (${pet.species})</option>`;
+                            });
+                        });
+                    }
+                });
+        }
+
+        function loadReminders() {
+            const selectedPetId = document.getElementById('petSelect').value;
+            fetch('/api/get_reminders' + (selectedPetId ? `?pet_id=${selectedPetId}` : ''))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayReminders(data.reminders);
+                        updateWellnessScore(data.reminders); // Ensure wellness score is updated
+                    }
+                });
+        }
+
+        function displayReminders(reminders) {
+            const container = document.getElementById('remindersContainer');
+
+            if (reminders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-calendar-plus fa-3x mb-3"></i>
+                        <h6>No reminders scheduled</h6>
+                        <p class="small">Add your first wellness reminder to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const now = new Date();
+            const upcoming = reminders.filter(r => !r.completed && new Date(r.due_date) >= now);
+            const overdue = reminders.filter(r => !r.completed && new Date(r.due_date) < now);
+            const completed = reminders.filter(r => r.completed);
+
+            container.innerHTML = `
+                ${overdue.length > 0 ? `
+                    <div class="p-3 border-bottom">
+                        <h6 class="text-danger mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Overdue (${overdue.length})</h6>
+                        ${overdue.map(reminder => renderReminderItem(reminder, 'danger')).join('')}
+                    </div>
+                ` : ''}
+
+                ${upcoming.length > 0 ? `
+                    <div class="p-3 border-bottom">
+                        <h6 class="text-primary mb-3"><i class="fas fa-clock me-2"></i>Upcoming (${upcoming.length})</h6>
+                        ${upcoming.map(reminder => renderReminderItem(reminder, 'primary')).join('')}
+                    </div>
+                ` : ''}
+
+                ${completed.length > 0 ? `
+                    <div class="p-3">
+                        <h6 class="text-success mb-3"><i class="fas fa-check-circle me-2"></i>Completed (${completed.length})</h6>
+                        ${completed.slice(0, 5).map(reminder => renderReminderItem(reminder, 'success')).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function renderReminderItem(reminder, type) {
+            const dueDate = new Date(reminder.due_date);
+            const isOverdue = !reminder.completed && dueDate < new Date();
+
+            return `
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-${getReminderIcon(reminder.title)} text-${type} me-2"></i>
+                            <div>
+                                <h6 class="mb-0 ${reminder.completed ? 'text-decoration-line-through' : ''}">${reminder.title}</h6>
+                                <small class="text-muted">${formatDateTime(reminder.due_date)}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        ${!reminder.completed ? `
+                            <button class="btn btn-success btn-sm" onclick="completeReminder(${reminder.id})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        ` : `
+                            <span class="badge bg-success">Done</span>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getReminderIcon(title) {
+            const iconMap = {
+                'vaccination': 'syringe',
+                'grooming': 'cut',
+                'checkup': 'stethoscope',
+                'medication': 'pills',
+                'flea': 'bug',
+                'deworming': 'shield-alt',
+                'nail': 'scissors',
+                'dental': 'tooth'
+            };
+
+            for (const [key, icon] of Object.entries(iconMap)) {
+                if (title.toLowerCase().includes(key)) {
+                    return icon;
+                }
+            }
+            return 'calendar-alt';
+        }
+
+        function showAddReminderModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addReminderModal'));
+            modal.show();
+        }
+
+        function addReminder(type) {
+            document.getElementById('reminderType').value = type;
+            document.getElementById('reminderTitle').value = type.charAt(0).toUpperCase() + type.slice(1) + ' Reminder';
+            showAddReminderModal();
+        }
+
+        function saveReminder() {
+            const form = document.getElementById('reminderForm');
+            const petId = document.getElementById('reminderPet').value;
+            const title = document.getElementById('reminderTitle').value;
+            const dueDate = document.getElementById('reminderDate').value;
+
+            if (!petId || !title || !dueDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            fetch('/api/add_reminder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    pet_id: parseInt(petId),
+                    title: title,
+                    due_date: dueDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('addReminderModal')).hide();
+                    form.reset();
+                    loadReminders();
+                    showNotification('Reminder added successfully!', 'success');
+                } else {
+                    showNotification('Error adding reminder: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Error adding reminder: ' + error.message, 'error');
+            });
+        }
+
+        function completeReminder(reminderId) {
+            fetch(`/api/complete_reminder/${reminderId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadReminders();
+                    loadWellnessInsights(); // Refresh wellness insights immediately
+                    showNotification('Reminder completed!', 'success');
+                } else {
+                    showNotification('Error completing reminder', 'error');
+                }
+            });
+        }
+
+        function loadWellnessData() {
+            loadReminders();
+            loadWellnessInsights(); // Load insights when pet is changed
+        }
+
+        function generateMiniCalendar() {
+            const calendar = document.getElementById('miniCalendar');
+
+            // Check if calendar element exists
+            if (!calendar) {
+                console.warn('Mini calendar element not found');
+                return;
+            }
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            calendar.innerHTML = `
+                <div class="text-center mb-2">
+                    <strong>${monthNames[month]} ${year}</strong>
+                </div>
+                <div class="row g-1 text-center small">
+                    <div class="col text-muted">S</div>
+                    <div class="col text-muted">M</div>
+                    <div class="col text-muted">T</div>
+                    <div class="col text-muted">W</div>
+                    <div class="col text-muted">T</div>
+                    <div class="col text-muted">F</div>
+                    <div class="col text-muted">S</div>
+                </div>
+            `;
+
+            // Simple calendar grid (placeholder)
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let calendarHTML = '';
+            let dayCount = 1;
+
+            for (let week = 0; week < 6; week++) {
+                calendarHTML += '<div class="row g-1 text-center small">';
+                for (let day = 0; day < 7; day++) {
+                    if (week === 0 && day < firstDay) {
+                        calendarHTML += '<div class="col"></div>';
+                    } else if (dayCount <= daysInMonth) {
+                        const isToday = dayCount === now.getDate();
+                        calendarHTML += `<div class="col ${isToday ? 'bg-primary text-white rounded' : ''}">${dayCount}</div>`;
+                        dayCount++;
+                    } else {
+                        calendarHTML += '<div class="col"></div>';
+                    }
+                }
+                calendarHTML += '</div>';
+                if (dayCount > daysInMonth) break;
+            }
+
+            calendar.innerHTML += calendarHTML;
+        }
+
+        // Handle reminder type change
+        document.getElementById('reminderType').addEventListener('change', function() {
+            const type = this.value;
+            const titleField = document.getElementById('reminderTitle');
+            if (type && type !== 'other') {
+                titleField.value = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ') + ' Reminder';
+            }
+        });
+
+        // Utility functions
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function showNotification(message, type) {
+            // Use the global notification function
+            if (window.PetHealthPro && window.PetHealthPro.showNotification) {
+                window.PetHealthPro.showNotification(message, type);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Load wellness insights
+        function loadWellnessInsights() {
+            let healthHistoryData = [];
+            let remindersData = [];
+
+            // Get health history to calculate metrics
+            fetch('/api/get_health_history')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        healthHistoryData = data.health_history;
+                        // Calculate metrics with both health history and reminders
+                        calculateWellnessMetrics(healthHistoryData, remindersData);
+                    }
+                });
+
+            // Get reminders to calculate completion rate
+            fetch('/api/get_reminders')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        remindersData = data.reminders;
+                        updateWellnessScore(data.reminders);
+                        // Update metrics with reminders data
+                        calculateWellnessMetrics(healthHistoryData, remindersData);
+                    }
+                });
+        }
+
+        function calculateWellnessMetrics(healthHistory, reminders = []) {
+            const lastCheckupElement = document.getElementById('lastCheckupText');
+
+            // Check for completed checkup reminders first
+            const completedCheckupReminders = reminders.filter(r => 
+                r.completed && 
+                (r.title.toLowerCase().includes('checkup') || 
+                 r.title.toLowerCase().includes('vet') ||
+                 r.title.toLowerCase().includes('examination'))
+            ).sort((a, b) => {
+                const dateA = a.completed_date ? new Date(a.completed_date) : new Date(a.due_date);
+                const dateB = b.completed_date ? new Date(b.completed_date) : new Date(b.due_date);
+                return dateB - dateA;
+            });
+
+            // Also check health history for actual checkups
+            const checkupHistory = healthHistory ? healthHistory.filter(h => 
+                h.symptoms && (
+                    h.symptoms.toLowerCase().includes('checkup') || 
+                    h.symptoms.toLowerCase().includes('examination') ||
+                    (h.recommendation && h.recommendation.toLowerCase().includes('checkup'))
+                )
+            ).sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+
+            let lastCheckupDate = null;
+
+            // Find the most recent checkup from completed reminders
+            if (completedCheckupReminders.length > 0) {
+                const latestReminder = completedCheckupReminders[0];
+                lastCheckupDate = latestReminder.completed_date ? 
+                    new Date(latestReminder.completed_date) : 
+                    new Date(latestReminder.due_date);
+            }
+
+            // Check health history for actual recorded checkups
+            if (checkupHistory.length > 0) {
+                const historyDate = new Date(checkupHistory[0].date);
+                if (!lastCheckupDate || historyDate > lastCheckupDate) {
+                    lastCheckupDate = historyDate;
+                }
+            }
+
+            if (lastCheckupDate) {
+                const daysSinceCheckup = Math.floor((new Date() - lastCheckupDate) / (1000 * 60 * 60 * 24));
+
+                // Handle edge case where completed reminder had a future due date
+                if (daysSinceCheckup < 0) {
+                    lastCheckupElement.textContent = 'Recently completed';
+                    lastCheckupElement.className = 'text-success fw-bold';
+                } else if (daysSinceCheckup === 0) {
+                    lastCheckupElement.textContent = 'Today';
+                    lastCheckupElement.className = 'text-success fw-bold';
+                } else if (daysSinceCheckup <= 30) {
+                    lastCheckupElement.textContent = `${daysSinceCheckup} days ago`;
+                    lastCheckupElement.className = 'text-success fw-bold';
+                } else if (daysSinceCheckup <= 90) {
+                    lastCheckupElement.textContent = `${daysSinceCheckup} days ago`;
+                    lastCheckupElement.className = 'text-warning';
+                } else {
+                    lastCheckupElement.textContent = `${daysSinceCheckup} days ago`;
+                    lastCheckupElement.className = 'text-danger';
+                }
+            } else {
+                lastCheckupElement.textContent = 'No records';
+                lastCheckupElement.className = 'text-muted';
+            }
+        }
+
+        function updateWellnessScore(reminders) {
+            const vaccinationElement = document.getElementById('vaccinationStatusText');
+            const wellnessProgressBar = document.getElementById('wellnessProgress');
+            const wellnessScoreText = document.getElementById('wellnessScoreText');
+
+            if (reminders && reminders.length > 0) {
+                const completedReminders = reminders.filter(r => r.completed).length;
+                const totalReminders = reminders.length;
+                const completionRate = Math.round((completedReminders / totalReminders) * 100);
+
+                // Update wellness score
+                wellnessProgressBar.style.width = completionRate + '%';
+                wellnessScoreText.textContent = `${completionRate}% - Based on reminder completion`;
+
+                // Update progress bar color based on score
+                wellnessProgressBar.className = 'progress-bar';
+                if (completionRate >= 80) {
+                    wellnessProgressBar.classList.add('bg-success');
+                } else if (completionRate >= 60) {
+                    wellnessProgressBar.classList.add('bg-warning');
+                } else {
+                    wellnessProgressBar.classList.add('bg-danger');
+                }
+
+                // Check for vaccination reminders
+                const vaccinationReminders = reminders.filter(r => 
+                    r.title.toLowerCase().includes('vaccination') || 
+                    r.title.toLowerCase().includes('vaccine') ||
+                    r.title.toLowerCase().includes('shot')
+                );
+
+                if (vaccinationReminders.length > 0) {
+                    const completedVaccinations = vaccinationReminders.filter(r => r.completed).length;
+                    const overdueVaccinations = vaccinationReminders.filter(r => 
+                        !r.completed && new Date(r.due_date) < new Date()
+                    ).length;
+
+                    if (overdueVaccinations > 0) {
+                        vaccinationElement.textContent = `${overdueVaccinations} overdue`;
+                        vaccinationElement.className = 'text-danger fw-bold';
+                    } else if (completedVaccinations === vaccinationReminders.length) {
+                        vaccinationElement.textContent = 'Up to date';
+                        vaccinationElement.className = 'text-success fw-bold';
+                    } else {
+                        vaccinationElement.textContent = 'Partial';
+                        vaccinationElement.className = 'text-warning';
+                    }
+                } else {
+                    vaccinationElement.textContent = 'No records';
+                    vaccinationElement.className = 'text-muted';
+                }
+            } else {
+                wellnessProgressBar.style.width = '0%';
+                wellnessScoreText.textContent = '0% - No reminders set';
+                vaccinationElement.textContent = 'No records';
+                vaccinationElement.className = 'text-muted';
+            }
+        }
+    </script>
+</body>
+
+</html>

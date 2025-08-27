@@ -1,0 +1,17 @@
+# How to run this project locally
+
+1. Create a virtual environment:
+   python -m venv venv
+
+2. Activate it:
+   - On Linux/Mac: source venv/bin/activate
+   - On Windows: venv\Scripts\activate
+
+3. Install dependencies:
+   pip install -r requirements.txt
+
+4. Rename env_copy.txt back to .env:
+   mv env_copy.txt .env
+
+5. Start the project:
+   flask run    OR    python app.py
