@@ -78,21 +78,21 @@ def analyze_pet_symptoms(pet, symptoms):
             f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
             headers=headers,
             json=payload,
-            timeout=30
+            timeout=60
         )
 
         if response.status_code != 200:
             logging.error(f"Gemini API error: {response.status_code} - {response.text}")
-            
+
             # Check if it's a quota exceeded error
             if response.status_code == 429:
                 return {
                     "diagnosis": ["API quota exceeded - please try again later"],
-                    "urgency_level": "Service Unavailable", 
+                    "urgency_level": "Service Unavailable",
                     "recommendation": "The AI service has reached its daily quota. Please try again later or contact support.",
                     "possible_causes": ["API quota limit reached"]
                 }
-            
+
             return {
                 "diagnosis": [],
                 "urgency_level": "Unknown",
@@ -144,15 +144,13 @@ def analyze_pet_symptoms(pet, symptoms):
 
         return analysis
 
+    except requests.exceptions.Timeout:
+        logging.error("Gemini API timeout - returning fallback response")
+        return get_fallback_symptom_analysis(pet, symptoms)
     except Exception as e:
         logging.error(f"Error in symptom analysis: {e}")
         logging.error(traceback.format_exc())
-        return {
-            "diagnosis": [],
-            "urgency_level": "Unknown",
-            "recommendation": "",
-            "possible_causes": []
-        }
+        return get_fallback_symptom_analysis(pet, symptoms)
 
 
 def normalize_image_analysis(analysis: dict) -> dict:
@@ -244,7 +242,7 @@ def analyze_pet_image(pet, image_path, description=""):
 
         if response.status_code != 200:
             logging.error(f"Gemini API error: {response.status_code} - {response.text}")
-            
+
             # Check if it's a quota exceeded error
             if response.status_code == 429:
                 return {
@@ -254,7 +252,7 @@ def analyze_pet_image(pet, image_path, description=""):
                     "possible_causes": ["API quota limit reached"],
                     "condition_likelihood": "Cannot analyze due to quota limit"
                 }
-            
+
             return {
                 "diagnosis": [],
                 "urgency_level": "Unknown",
@@ -322,16 +320,12 @@ def analyze_pet_image(pet, image_path, description=""):
         logging.info(f"Normalized image analysis: {normalized}")
         return normalized
 
+    except requests.exceptions.Timeout:
+        logging.error("Gemini API timeout during image analysis - returning fallback response")
+        return get_fallback_image_analysis(pet, description)
     except Exception as e:
         logging.error(f"Error in image analysis: {e}")
-        logging.error(traceback.format_exc())
-        return {
-            "diagnosis": [],
-            "urgency_level": "Unknown",
-            "recommendation": "",
-            "possible_causes": [],
-            "condition_likelihood": "Unknown"
-        }
+        return get_fallback_image_analysis(pet, description)
 
 
 def get_diagnosis_explanation_from_gemini(diagnosis_name):
@@ -378,7 +372,7 @@ def get_diagnosis_explanation_from_gemini(diagnosis_name):
             f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
             headers=headers,
             json=payload,
-            timeout=30
+            timeout=60
         )
 
         if response.status_code != 200:
@@ -422,62 +416,56 @@ def get_diagnosis_explanation_from_gemini(diagnosis_name):
             "symptoms": symptoms[:5]  # Limit to 5 items
         }
 
+    except requests.exceptions.Timeout:
+        logging.error("Gemini API timeout for diagnosis explanation - returning fallback response")
+        return get_fallback_explanation(diagnosis_name)
     except Exception as e:
         logging.error(f"Error getting diagnosis explanation from Gemini: {e}")
         return get_fallback_explanation(diagnosis_name)
 
 
-def get_fallback_explanation(diagnosis_name):
-    """Provide a comprehensive fallback explanation when AI is unavailable"""
-
-    # Common conditions with specific information
-    condition_info = {
-        "alopecia": {
-            "description": "Hair loss in pets that can be caused by various factors including allergies, parasites, infections, or hormonal imbalances.",
-            "causes": ["Allergic reactions", "Parasitic infections (fleas, mites)", "Bacterial or fungal infections", "Hormonal imbalances", "Stress or anxiety", "Poor nutrition"],
-            "symptoms": ["Patchy or complete hair loss", "Red or irritated skin", "Excessive scratching or licking", "Skin lesions or bumps", "Changes in skin color or texture"]
-        },
-        "skin infection": {
-            "description": "Bacterial, fungal, or parasitic infections affecting the skin that require veterinary treatment.",
-            "causes": ["Bacterial overgrowth", "Fungal infections", "Parasitic infestations", "Allergic reactions", "Poor hygiene", "Compromised immune system"],
-            "symptoms": ["Red, inflamed skin", "Discharge or pus", "Foul odor", "Excessive scratching", "Hair loss around affected areas", "Crusty or scaly patches"]
-        },
-        "demodectic mange": {
-            "description": "A skin condition caused by Demodex mites that naturally live on pets but can overpopulate when the immune system is compromised.",
-            "causes": ["Weakened immune system", "Genetic predisposition", "Stress", "Poor nutrition", "Age (young or elderly pets)", "Underlying health conditions"],
-            "symptoms": ["Hair loss in patches", "Red, inflamed skin", "Scaling or crusty areas", "Secondary bacterial infections", "Mild to no itching initially"]
-        },
-        "ringworm": {
-            "description": "A fungal infection that affects the skin, hair, and sometimes nails, despite its name having nothing to do with worms.",
-            "causes": ["Fungal spores in environment", "Contact with infected animals", "Contaminated objects", "Weakened immune system", "Poor hygiene", "Overcrowded conditions"],
-            "symptoms": ["Circular patches of hair loss", "Red, scaly skin", "Broken or brittle hair", "Mild itching", "Crusty or inflamed areas", "Spreading lesions"]
-        }
+def get_fallback_symptom_analysis(pet, symptoms):
+    """Provide a basic fallback analysis when Gemini is unavailable"""
+    return {
+        "diagnosis": ["Veterinary consultation recommended"],
+        "urgency_level": "Medium",
+        "recommendation": f"Based on the symptoms described for {pet.name}, we recommend scheduling a consultation with your veterinarian for proper evaluation and diagnosis. The symptoms you've noted should be assessed by a professional.",
+        "possible_causes": [
+            "Multiple factors could contribute to these symptoms",
+            "Professional evaluation needed for accurate assessment"
+        ]
     }
 
-    # Check if we have specific information for this condition
-    clean_diagnosis = diagnosis_name.lower().strip()
 
-    for condition, info in condition_info.items():
-        if condition in clean_diagnosis:
-            return info
-
-    # Generic fallback for unknown conditions
+def get_fallback_explanation(diagnosis_name):
+    """Provide a basic fallback explanation when Gemini is unavailable"""
     return {
-        "description": f"{diagnosis_name} is a medical condition that may affect your pet's health. A thorough veterinary examination is recommended for proper diagnosis and treatment planning.",
+        "description": f"{diagnosis_name} is a condition that may affect your pet's health. It's important to monitor your pet closely and consult with a veterinarian for proper diagnosis and treatment.",
         "causes": [
-            "Various underlying health factors",
-            "Environmental influences", 
+            "Various environmental factors",
             "Genetic predisposition",
             "Age-related changes",
-            "Lifestyle factors",
-            "Immune system factors"
+            "Dietary factors",
+            "Stress or lifestyle changes"
         ],
         "symptoms": [
-            "Changes in appetite or behavior",
-            "Worsening of current symptoms", 
-            "New or unusual symptoms",
-            "Signs of pain or discomfort",
-            "Any concerning changes in your pet's condition",
-            "Monitor for progression of symptoms"
+            "Changes in behavior or appetite",
+            "Physical discomfort or unusual movements",
+            "Altered energy levels",
+            "Changes in normal routines"
         ]
+    }
+
+
+def get_fallback_image_analysis(pet, description):
+    """Provide a basic fallback analysis when Gemini is unavailable for image analysis"""
+    return {
+        "diagnosis": ["Image analysis unavailable - veterinary consultation recommended"],
+        "urgency_level": "Medium",
+        "recommendation": f"We were unable to analyze the image for {pet.name} at this time. Please consult with your veterinarian to have the condition properly evaluated, especially if you notice any concerning changes.",
+        "possible_causes": [
+            "Professional evaluation needed for visual assessment",
+            "Multiple factors could contribute to visible symptoms"
+        ],
+        "condition_likelihood": "Unable to assess"
     }
