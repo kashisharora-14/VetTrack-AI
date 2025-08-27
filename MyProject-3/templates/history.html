@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,106 +8,191 @@
     <title>Health History - VetTrack Ai</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .sidebar {
-            max-width: 250px;
-        }
-
-        .record-filter button.active {
-            font-weight: bold;
-        }
-
-        .card {
-            cursor: pointer;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 
 <body class="bg-light">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-paw text-primary me-2"></i>
-                <strong>VetTrack Ai</strong>
+    <nav id="customNavbar" class="navbar navbar-expand-lg navbar-light py-3 shadow-sm rounded">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='paw.webp') }}" alt="" style="height: 50px; width: auto;">
+                VetTrack AI
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('dashboard') }}">
-                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+
+                    {% if user %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ user.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-dark rounded-pill ms-3 px-4" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 sidebar">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0"><i class="fas fa-paw me-2"></i>Select Pet</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div id="petsList" class="list-group list-group-flush"></div>
-                    </div>
-                </div>
+            <nav class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse border-end">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-1">
+                            <a class="nav-link rounded" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link rounded" href="{{ url_for('symptom') }}">
+                                <i class="fas fa-stethoscope me-2"></i>Symptom Checker
+                            </a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link rounded" href="{{ url_for('image') }}">
+                                <i class="fas fa-camera me-2"></i>Photo Analysis
+                            </a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link active rounded" href="{{ url_for('history') }}">
+                                <i class="fas fa-history me-2"></i>Health History
+                            </a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link rounded" href="{{ url_for('wellness') }}">
+                                <i class="fas fa-calendar-alt me-2"></i>Wellness
+                            </a>
+                        </li>
+                    </ul>
 
-                <!-- Record Type Filter -->
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Record Type</h6>
+                    <!-- Pet Selection Card -->
+                    <div class="card shadow-sm mt-3">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h6 class="mb-0">
+                                <i class="fas fa-paw me-2"></i>Select Pet
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="petsList" class="list-group list-group-flush"></div>
+                        </div>
                     </div>
-                    <div class="card-body record-filter d-flex flex-column">
-                        <button class="btn btn-outline-primary mb-2 active" data-type="reminder">Reminders</button>
-                        <button class="btn btn-outline-success mb-2" data-type="consultation">Consultations</button>
-                        <button class="btn btn-outline-primary" data-type="health">Health</button>
+
+                    <!-- Record Type Filter -->
+                    <div class="card shadow-sm mt-3">
+                        <div class="card-header bg-secondary text-white py-3">
+                            <h6 class="mb-0">
+                                <i class="fas fa-filter me-2"></i>Record Type
+                            </h6>
+                        </div>
+                        <div class="card-body record-filter d-flex flex-column">
+                            <button class="btn btn-outline-primary mb-2 active" data-type="reminder">
+                                <i class="fas fa-bell me-1"></i>Reminders
+                            </button>
+                            <button class="btn btn-outline-success mb-2" data-type="consultation">
+                                <i class="fas fa-video me-1"></i>Consultations
+                            </button>
+                            <button class="btn btn-outline-info" data-type="health">
+                                <i class="fas fa-heartbeat me-1"></i>Health Records
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </nav>
 
             <!-- Main Content -->
-            <div class="col-lg-9">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body text-center">
-                        <i class="fas fa-history text-primary display-4 mb-3"></i>
-                        <h1 class="h2 fw-bold">Health History</h1>
-                        <p class="text-muted">Timeline of your pet's health records and AI analyses</p>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Health History</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                        <button type="button" class="btn btn-primary" onclick="exportHistory()">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Card -->
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-body text-center py-5">
+                        <div class="feature-icon bg-primary text-white mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-history fa-2x"></i>
+                        </div>
+                        <h2 class="h3 fw-bold text-primary mb-3">Pet Health Timeline</h2>
+                        <p class="text-muted lead">
+                            Comprehensive timeline of your pet's health records, AI analyses, and veterinary consultations
+                        </p>
                     </div>
                 </div>
 
                 <div id="historyContainer">
                     <div id="noSelectionMessage" class="text-center text-muted py-5">
-                        <i class="fas fa-arrow-left fa-3x mb-3"></i>
-                        <h4>Select a Pet</h4>
-                        <p>Choose a pet from the sidebar to view their health history</p>
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body py-5">
+                                <i class="fas fa-arrow-left fa-4x mb-3 text-primary"></i>
+                                <h4 class="fw-bold">Select a Pet</h4>
+                                <p class="text-muted">Choose a pet from the sidebar to view their complete health history</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="historyCards" class="row g-3" style="display: none;"></div>
+                    <div id="historyCards" class="row g-4" style="display: none;"></div>
+                    
                     <div id="noHistoryMessage" class="text-center text-muted py-5" style="display: none;">
-                        <i class="fas fa-clipboard fa-3x mb-3"></i>
-                        <h4>No Records</h4>
-                        <p>This pet has no records for the selected type.</p>
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body py-5">
+                                <i class="fas fa-clipboard fa-4x mb-3 text-muted"></i>
+                                <h4 class="fw-bold">No Records Found</h4>
+                                <p class="text-muted">This pet has no records for the selected type.</p>
+                                <button class="btn btn-primary mt-3" onclick="addQuickEntry()">
+                                    <i class="fas fa-plus me-1"></i>Add First Record
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Record Details Modal -->
     <div class="modal fade" id="recordModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Record Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-medical me-2"></i>Record Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="recordDetails"></div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Close
+                    </button>
                     <button type="button" class="btn btn-primary" onclick="startConsultationFromModal()">
                         <i class="fas fa-video me-1"></i>Discuss with Vet
                     </button>
@@ -129,20 +215,43 @@
 
             // Load pets
             async function loadPets() {
-                petsList.innerHTML = `<div class="p-3 text-muted">Loading...</div>`;
+                petsList.innerHTML = `<div class="p-3 text-muted text-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    Loading pets...
+                </div>`;
                 try {
                     const response = await fetch("/api/get_pets");
                     const result = await response.json();
                     petsList.innerHTML = "";
-                    result.pets.forEach(pet => {
-                        const btn = document.createElement("button");
-                        btn.className = "list-group-item list-group-item-action";
-                        btn.textContent = pet.name;
-                        btn.onclick = () => selectPet(pet);
-                        petsList.appendChild(btn);
-                    });
+                    
+                    if (result.pets && result.pets.length > 0) {
+                        result.pets.forEach(pet => {
+                            const btn = document.createElement("button");
+                            btn.className = "list-group-item list-group-item-action d-flex align-items-center";
+                            btn.innerHTML = `
+                                <i class="fas fa-paw me-3 text-primary"></i>
+                                <div>
+                                    <div class="fw-semibold">${pet.name}</div>
+                                    <small class="text-muted">${pet.species} • ${pet.breed}</small>
+                                </div>
+                            `;
+                            btn.onclick = () => selectPet(pet);
+                            petsList.appendChild(btn);
+                        });
+                    } else {
+                        petsList.innerHTML = `
+                            <div class="p-3 text-center text-muted">
+                                <i class="fas fa-paw fa-2x mb-2"></i>
+                                <p class="mb-0">No pets found</p>
+                                <small>Add a pet in your dashboard first</small>
+                            </div>
+                        `;
+                    }
                 } catch (err) {
-                    petsList.innerHTML = `<p class="text-danger p-3">Failed to load pets</p>`;
+                    petsList.innerHTML = `<div class="p-3 text-danger text-center">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Failed to load pets
+                    </div>`;
                 }
             }
 
@@ -160,10 +269,17 @@
                 try {
                     const response = await fetch(`/api/pet/${currentPetId}/full-history`);
                     const data = await response.json();
-                    timelineData = data.timeline;
+                    timelineData = data.timeline || [];
                     renderCards();
                 } catch (err) {
-                    historyCards.innerHTML = `<p class="text-danger">Failed to load history</p>`;
+                    historyCards.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Failed to load history. Please try again.
+                            </div>
+                        </div>
+                    `;
                 }
             }
 
@@ -180,10 +296,10 @@
 
                 filtered.forEach(record => {
                     const col = document.createElement("div");
-                    col.className = "col-md-6";
+                    col.className = "col-md-6 col-lg-4";
 
                     const card = document.createElement("div");
-                    card.className = "card shadow-sm p-3";
+                    card.className = "card shadow-sm hover-lift h-100";
                     card.onclick = () => {
                         document.getElementById("recordDetails").innerHTML = generateRecordHTML(record);
                         document.getElementById("recordModal").dataset.petId = currentPetId;
@@ -197,21 +313,86 @@
             }
 
             function generateRecordHTML(record, brief = false) {
-                let html = `<div class="mb-1"><strong>Date:</strong> ${new Date(record.date).toLocaleString()}</div>`;
+                let html = '';
+                let badgeClass = '';
+                let iconClass = '';
 
                 if (record.type === "health") {
-                    html += `<span class="badge bg-primary mb-2">Health</span>`;
-                    html += `<div><strong>Symptoms:</strong> ${record.symptoms}</div>`;
-                    if (!brief) html += `<div><strong>Diagnosis:</strong> ${record.diagnosis}</div>`;
-                    if (!brief) html += `<div><strong>Recommendation:</strong> ${record.recommendation}</div>`;
-                    if (!brief) html += `<div><strong>Urgency:</strong> ${record.urgency_level || "—"}</div>`;
+                    badgeClass = 'bg-info';
+                    iconClass = 'fas fa-heartbeat';
                 } else if (record.type === "consultation") {
-                    html += `<span class="badge bg-success mb-2">Consultation</span>`;
-                    html += `<div><strong>Summary:</strong> ${record.summary || "—"}</div>`;
+                    badgeClass = 'bg-success';
+                    iconClass = 'fas fa-video';
                 } else if (record.type === "reminder") {
-                    html += `<span class="badge bg-warning text-dark mb-2">Reminder</span>`;
-                    html += `<div><strong>Title:</strong> ${record.title}</div>`;
-                    html += `<div><strong>Completed:</strong> ${record.completed ? "Yes" : "No"}</div>`;
+                    badgeClass = 'bg-warning text-dark';
+                    iconClass = 'fas fa-bell';
+                }
+
+                if (brief) {
+                    html = `
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge ${badgeClass}">
+                                    <i class="${iconClass} me-1"></i>
+                                    ${record.type.charAt(0).toUpperCase() + record.type.slice(1)}
+                                </span>
+                                <small class="text-muted">${new Date(record.date).toLocaleDateString()}</small>
+                            </div>
+                    `;
+
+                    if (record.type === "health") {
+                        html += `
+                            <h6 class="card-title">Health Record</h6>
+                            <p class="card-text text-muted">${record.symptoms ? record.symptoms.substring(0, 80) + '...' : 'No symptoms recorded'}</p>
+                        `;
+                    } else if (record.type === "consultation") {
+                        html += `
+                            <h6 class="card-title">Consultation</h6>
+                            <p class="card-text text-muted">${record.summary ? record.summary.substring(0, 80) + '...' : 'No summary available'}</p>
+                        `;
+                    } else if (record.type === "reminder") {
+                        html += `
+                            <h6 class="card-title">${record.title || 'Reminder'}</h6>
+                            <p class="card-text">
+                                <span class="badge ${record.completed ? 'bg-success' : 'bg-warning text-dark'}">${record.completed ? 'Completed' : 'Pending'}</span>
+                            </p>
+                        `;
+                    }
+
+                    html += `
+                            <div class="mt-auto">
+                                <small class="text-primary">Click to view details</small>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html = `
+                        <div class="mb-3">
+                            <span class="badge ${badgeClass} me-2">
+                                <i class="${iconClass} me-1"></i>
+                                ${record.type.charAt(0).toUpperCase() + record.type.slice(1)}
+                            </span>
+                            <strong>Date:</strong> ${new Date(record.date).toLocaleString()}
+                        </div>
+                    `;
+
+                    if (record.type === "health") {
+                        html += `
+                            <div class="mb-2"><strong>Symptoms:</strong> ${record.symptoms || 'Not specified'}</div>
+                            <div class="mb-2"><strong>Diagnosis:</strong> ${record.diagnosis || 'Not provided'}</div>
+                            <div class="mb-2"><strong>Recommendation:</strong> ${record.recommendation || 'Not provided'}</div>
+                            <div class="mb-2"><strong>Urgency:</strong> ${record.urgency_level || 'Not specified'}</div>
+                        `;
+                    } else if (record.type === "consultation") {
+                        html += `<div class="mb-2"><strong>Summary:</strong> ${record.summary || 'No summary available'}</div>`;
+                    } else if (record.type === "reminder") {
+                        html += `
+                            <div class="mb-2"><strong>Title:</strong> ${record.title || 'Untitled'}</div>
+                            <div class="mb-2"><strong>Status:</strong> 
+                                <span class="badge ${record.completed ? 'bg-success' : 'bg-warning text-dark'}">${record.completed ? 'Completed' : 'Pending'}</span>
+                            </div>
+                        `;
+                    }
                 }
 
                 return html;
@@ -233,24 +414,34 @@
         function startConsultationFromModal() {
             const recordModalEl = document.getElementById('recordModal');
             const petId = recordModalEl.dataset.petId;
-            if (petId) window.location.href = `/consultation/${petId}`;
-            else alert("Pet ID not found for this record.");
+            if (petId) {
+                window.location.href = `/consultation/${petId}`;
+            } else {
+                alert("Pet ID not found for this record.");
+            }
         }
 
         function exportHistory() {
-            alert("Export functionality not yet implemented.");
+            if (!currentPetId) {
+                alert("Please select a pet first.");
+                return;
+            }
+            alert("Export functionality will be implemented soon.");
         }
 
         function addQuickEntry() {
-            alert("Add Entry functionality not yet implemented.");
-        }
-
-        function filterHistory() {
-            alert("Filter functionality not yet implemented.");
-        }
-
-        function clearHistory() {
-            alert("Clear All functionality not yet implemented.");
+            if (!currentPetId) {
+                alert("Please select a pet first.");
+                return;
+            }
+            // Redirect to appropriate service based on current type
+            if (currentType === 'health') {
+                window.location.href = '/symptom';
+            } else if (currentType === 'reminder') {
+                window.location.href = '/wellness';
+            } else {
+                window.location.href = '/dashboard';
+            }
         }
     </script>
 </body>
