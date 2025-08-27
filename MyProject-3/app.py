@@ -111,11 +111,11 @@ def dashboard():
     health_history_query = HealthHistory.query.filter(
         HealthHistory.pet_id.in_(pet_ids)
     ).order_by(HealthHistory.id.desc(), HealthHistory.date.desc())
-    
+
     pagination = health_history_query.paginate(
         page=page, per_page=per_page, error_out=False
     )
-    
+
     health_history = pagination.items
 
     data = []
@@ -287,11 +287,11 @@ def history():
     if 'user_id' not in session:
         flash("Please log in to access health history", "warning")
         return redirect(url_for("login"))
-    
+
     user_id = session['user_id']
     user = User.query.get(user_id)
     pets = PetProfile.query.filter_by(user_id=user_id).all()
-    
+
     return render_template('history.html', user=user, pets=pets)
 
 
@@ -319,35 +319,35 @@ def get_diagnosis_explanation():
     try:
         data = request.get_json()
         diagnosis = data.get('diagnosis', '').strip()
-        
+
         logging.info(f"Getting explanation for diagnosis: '{diagnosis}'")
-        
+
         if not diagnosis:
             return jsonify({'success': False, 'error': 'Diagnosis name is required'})
-        
+
         # Skip warning messages
         if diagnosis.lower().startswith('warning') or '⚠' in diagnosis:
             return jsonify({'success': False, 'error': 'Cannot explain warning messages'})
-        
+
         explanation = get_diagnosis_explanation_from_gemini(diagnosis)
-        
+
         logging.info(f"Generated explanation: {explanation}")
-        
+
         # Ensure we always have valid content
         if not explanation or not explanation.get('description'):
             logging.warning("Empty explanation from Gemini, using fallback")
             from gemini import get_fallback_explanation
             explanation = get_fallback_explanation(diagnosis)
-        
+
         return jsonify({
             'success': True,
             'explanation': explanation
         })
-        
+
     except Exception as e:
         logging.error(f"Error getting diagnosis explanation: {e}")
         logging.error(traceback.format_exc())
-        
+
         # Return fallback explanation instead of just error
         try:
             from gemini import get_fallback_explanation

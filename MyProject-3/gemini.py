@@ -92,6 +92,15 @@ def analyze_pet_symptoms(pet, symptoms):
                     "recommendation": "The AI service has reached its daily quota. Please try again later or contact support.",
                     "possible_causes": ["API quota limit reached"]
                 }
+            
+            # Check if it's a service overload error
+            elif response.status_code == 503:
+                return {
+                    "diagnosis": ["AI service temporarily overloaded - please try again in a few minutes"],
+                    "urgency_level": "Service Temporarily Unavailable",
+                    "recommendation": "The AI analysis service is currently experiencing high demand. Please wait a few minutes and try again.",
+                    "possible_causes": ["High server load", "Temporary service congestion"]
+                }
 
             return {
                 "diagnosis": [],
