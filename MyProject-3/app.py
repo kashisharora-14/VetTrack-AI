@@ -28,8 +28,8 @@ class Base(DeclarativeBase):
 
 # Create Flask app
 app = Flask(__name__)
-# Upload folder (inside static)
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+# Upload folder (inside static) - ensure absolute path
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -481,7 +481,7 @@ def add_pet():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
             profile_picture.save(filepath)          
-            profile_picture_filename = f"/static/uploads/{filename}"
+            profile_picture_filename = f"static/uploads/{filename}"
 
         pet = PetProfile(
             user_id=user_id,
@@ -904,7 +904,7 @@ def upload_image():
         return jsonify({
             'success': True,
             'analysis': response_data,
-            'image_url': f"/static/uploads/{filename}"
+            'image_url': f"static/uploads/{filename}"
         })
 
     except Exception as e:
