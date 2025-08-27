@@ -979,18 +979,93 @@ h1, h2, h3, h4, h5, h6 {
     .hero-section {
         min-height: 60vh;
         text-align: center;
+        padding: 1rem 0;
     }
 
+    .display-4 {
+        font-size: 2.5rem !important;
+    }
+
+    .lead {
+        font-size: 1rem !important;
+    }
+
+    /* Sidebar Mobile Fixes */
     .sidebar {
         min-height: auto;
         border-right: none;
         border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        min-width: 100%; /* Full width on mobile */
+        min-width: 100%;
+        position: relative;
     }
     
     .sidebar .nav-link {
-        white-space: normal; /* Allow wrapping on mobile if needed */
-        padding: 10px 12px;
+        white-space: normal;
+        padding: 12px 16px;
+        text-align: left;
+        width: 100%;
+    }
+
+    /* Mobile Navigation */
+    .navbar {
+        margin: 0.25rem;
+        border-radius: 15px !important;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+
+    /* Mobile Cards */
+    .card-body {
+        padding: 1rem;
+    }
+
+    .feature-card .card-body {
+        min-height: 200px;
+        padding: 1.25rem;
+    }
+
+    .feature-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.5rem;
+    }
+
+    /* Mobile Stats Cards */
+    .stat-card {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    /* Mobile Tables */
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .table td, .table th {
+        padding: 0.5rem 0.25rem;
+        vertical-align: middle;
+    }
+
+    /* Mobile Buttons */
+    .btn {
+        font-size: 0.875rem;
+        padding: 10px 16px;
+    }
+
+    .btn-lg {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+
+    /* Mobile Forms */
+    .form-control, .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
     }
 }
 
@@ -1034,24 +1109,137 @@ h1, h2, h3, h4, h5, h6 {
         font-size: 0.9rem;
         line-height: 1.4;
     }
+
+    /* Mobile Modal Improvements */
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    /* Mobile Footer */
+    footer .row {
+        text-align: center;
+    }
+
+    footer .col-lg-2,
+    footer .col-md-6 {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Mobile Timeline */
+    .timeline-item {
+        padding: 0.75rem;
+    }
+
+    /* Mobile Pet Cards */
+    .pet-item {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    /* Mobile Floating Elements - Reduce on small screens */
+    .hero-section .position-absolute {
+        display: none;
+    }
+
+    /* Show only a few key floating elements on mobile */
+    .hero-section .position-absolute:nth-child(1),
+    .hero-section .position-absolute:nth-child(3),
+    .hero-section .position-absolute:nth-child(5) {
+        display: block;
+        font-size: 1.5rem !important;
+    }
 }
 
 @media (max-width: 576px) {
     .hero-section {
-        padding: 2rem 0;
+        padding: 1.5rem 0;
     }
 
     .display-4 {
-        font-size: 2rem;
+        font-size: 1.875rem !important;
+        line-height: 1.1;
     }
 
     .btn-lg {
-        padding: 10px 20px;
-        font-size: 1rem;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        white-space: nowrap;
     }
 
     .card-body {
+        padding: 0.875rem;
+    }
+
+    .feature-card .card-body {
+        min-height: 180px;
         padding: 1rem;
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    /* Smaller text on very small screens */
+    .lead {
+        font-size: 0.95rem !important;
+    }
+
+    /* Compact navigation */
+    .navbar-brand img {
+        height: 40px;
+    }
+
+    /* Smaller stats */
+    .stat-number {
+        font-size: 1.75rem;
+    }
+
+    /* Compact sidebar */
+    .sidebar .nav-link {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    /* Mobile table improvements */
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+
+    .diagnosis-list {
+        max-width: 120px;
+    }
+
+    .recommendation-text {
+        max-width: 100px;
+        font-size: 0.75em;
+    }
+
+    /* Trust pills mobile optimization */
+    .trust-pill {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+        margin: 2px;
+    }
+
+    /* Mobile modal adjustments */
+    .modal-header {
+        padding: 1rem;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
     }
 }
 
