@@ -61,23 +61,28 @@
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
                         <li class="nav-item mb-1">
-                            <a class="nav-link rounded" href="{{ url_for('dashboard') }}">
+                            <a class="nav-link rounded d-flex align-items-center text-dark" href="{{ url_for('dashboard') }}" style="padding: 12px 16px; color: #1E293B !important;">
                                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link rounded" href="{{ url_for('symptom') }}">
+                            <a class="nav-link rounded d-flex align-items-center text-dark" href="{{ url_for('symptom') }}" style="padding: 12px 16px; color: #1E293B !important;">
                                 <i class="fas fa-stethoscope me-2"></i>Symptom Checker
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link rounded" href="{{ url_for('image') }}">
+                            <a class="nav-link rounded d-flex align-items-center text-dark" href="{{ url_for('image') }}" style="padding: 12px 16px; color: #1E293B !important;">
                                 <i class="fas fa-camera me-2"></i>Photo Analysis
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a class="nav-link active rounded" href="{{ url_for('history') }}">
+                            <a class="nav-link active rounded d-flex align-items-center" href="{{ url_for('history') }}" style="padding: 12px 16px; background-color: #29B6F6 !important; color: white !important;">
                                 <i class="fas fa-history me-2"></i>Health History
+                            </a>
+                        </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link rounded d-flex align-items-center text-dark" href="{{ url_for('wellness') }}" style="padding: 12px 16px; color: #1E293B !important;">
+                                <i class="fas fa-calendar-alt me-2"></i>Wellness
                             </a>
                         </li>
                         <li class="nav-item mb-1">
