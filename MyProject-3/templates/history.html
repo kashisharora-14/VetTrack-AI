@@ -126,12 +126,9 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Health History</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-2">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                         </a>
-                        <button type="button" class="btn btn-primary" onclick="exportHistory()">
-                            <i class="fas fa-download me-1"></i>Export
-                        </button>
                     </div>
                 </div>
 
@@ -421,13 +418,7 @@
             }
         }
 
-        function exportHistory() {
-            if (!currentPetId) {
-                alert("Please select a pet first.");
-                return;
-            }
-            alert("Export functionality will be implemented soon.");
-        }
+        
 
         function addQuickEntry() {
             if (!currentPetId) {
