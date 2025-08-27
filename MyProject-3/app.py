@@ -73,11 +73,19 @@ with app.app_context():
 # =====================
 # ROUTES
 # =====================
+def get_current_user():
+    """Helper function to get current logged in user"""
+    if 'user_id' not in session:
+        return None
+    try:
+        return User.query.get(session['user_id'])
+    except:
+        session.clear()  # Clear invalid session
+        return None
+
 @app.route("/")
 def index():
-    user = None
-    if 'user_id' in session:
-        user = User.query.get(session['user_id'])
+    user = get_current_user()
     return render_template("index.html", user=user)
 
 
@@ -85,12 +93,12 @@ import json
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session:
+    user = get_current_user()
+    if not user:
         flash("Please log in first", "danger")
         return redirect(url_for("login"))
 
-    user_id = session['user_id']
-    user = User.query.get(user_id)
+    user_id = user.id
 
     pets = PetProfile.query.filter_by(user_id=user_id).all()
     pet_ids = [pet.id for pet in pets]
@@ -279,7 +287,12 @@ def history():
     if 'user_id' not in session:
         flash("Please log in to access health history", "warning")
         return redirect(url_for("login"))
-    return render_template('history.html')
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    pets = PetProfile.query.filter_by(user_id=user_id).all()
+    
+    return render_template('history.html', user=user, pets=pets)
 
 
 @app.route('/wellness')
