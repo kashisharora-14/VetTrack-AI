@@ -501,6 +501,7 @@ h1, h2, h3, h4, h5, h6 {
 .sidebar {
     min-height: calc(100vh - 76px); /* Adjust for navbar height */
     border-right: 1px solid rgba(0, 0, 0, 0.1);
+    min-width: 200px; /* Ensure minimum width for full text visibility */
 }
 
 .sidebar .nav-link {
@@ -512,6 +513,11 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     text-decoration: none;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: visible; /* Show full text */
+    text-overflow: unset; /* Don't truncate text */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .sidebar .nav-link:hover {
@@ -528,6 +534,16 @@ h1, h2, h3, h4, h5, h6 {
 .sidebar .nav-link.active:hover {
     background-color: var(--primary-dark) !important;
     color: white !important;
+}
+
+/* Ensure sidebar items have proper spacing and visibility */
+.sidebar .nav-item {
+    width: 100%;
+}
+
+.sidebar .nav-item .nav-link {
+    justify-content: flex-start;
+    gap: 8px;
 }
 
 /* Buttons */
@@ -969,7 +985,14 @@ h1, h2, h3, h4, h5, h6 {
         min-height: auto;
         border-right: none;
         border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        min-width: 100%; /* Full width on mobile */
     }
+    
+    .sidebar .nav-link {
+        white-space: normal; /* Allow wrapping on mobile if needed */
+        padding: 10px 12px;
+    }
+}
 
     .feature-icon {
         width: 50px;
@@ -1030,6 +1053,40 @@ h1, h2, h3, h4, h5, h6 {
     .card-body {
         padding: 1rem;
     }
+}
+
+/* Sidebar specific fixes */
+.sidebar-consultation-btn,
+.sidebar .btn {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    padding: 12px var(--spacing-base);
+    border-radius: var(--border-radius);
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+.sidebar-consultation-btn:hover,
+.sidebar .btn:hover {
+    background-color: rgba(41, 182, 246, 0.1) !important;
+    color: var(--primary-color) !important;
+    transform: translateX(2px);
+}
+
+.sidebar-consultation-btn.active,
+.sidebar .btn.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
 }
 
 /* Enhanced Utility Classes */
