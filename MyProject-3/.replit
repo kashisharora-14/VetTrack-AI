@@ -1,5 +1,5 @@
 modules = ["python-3.11"]
-run = "node index.js"
+run = "python3 app.py"
 
 [nix]
 channel = "stable-25_05"
