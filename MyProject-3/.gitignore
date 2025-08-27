@@ -1,0 +1,56 @@
+# ----------------------
+# Python cache / build
+# ----------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ----------------------
+# Virtual environment
+# ----------------------
+venv/
+.env/
+ENV/
+env/
+
+# ----------------------
+# Databases
+# ----------------------
+*.db
+*.sqlite3
+
+# ----------------------
+# Logs & temp files
+# ----------------------
+*.log
+*.zip
+*.tar
+*.gz
+
+# ----------------------
+# User uploads
+# ----------------------
+static/uploads/
+
+# ----------------------
+# IDE / Editor
+# ----------------------
+.vscode/
+.idea/
+*.swp
+
+# ----------------------
+# System files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# ngrok (local only)
+# ----------------------
+ngrok.exe
