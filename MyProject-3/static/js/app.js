@@ -19,6 +19,7 @@ function initializeApp() {
 
     // Initialize any other global components
     setupGlobalEventListeners();
+    setupTTS();
 }
 
 function setupGlobalEventListeners() {
@@ -34,6 +35,94 @@ function setupGlobalEventListeners() {
 
     // Handle navigation active states
     updateActiveNavigation();
+}
+
+// ===============
+// Murf TTS Client
+// ===============
+let ttsAudioElement = null;
+let lastTtsBlobUrl = null;
+
+function setupTTS() {
+    // Create a single hidden audio element reused across pages
+    ttsAudioElement = document.createElement('audio');
+    ttsAudioElement.setAttribute('preload', 'auto');
+    ttsAudioElement.style.display = 'none';
+    document.body.appendChild(ttsAudioElement);
+}
+
+async function fetchMurfTts(text, opts = {}) {
+    const body = {
+        text: text,
+        voice_id: opts.voiceId || 'en-US-natalie',
+        format: opts.format || 'MP3'
+    };
+    const resp = await fetch('/api/tts_generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'TTS failed');
+    const mime = data.mime || 'audio/mpeg';
+    const bin = atob(data.audio_b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: mime });
+    if (lastTtsBlobUrl) URL.revokeObjectURL(lastTtsBlobUrl);
+    lastTtsBlobUrl = URL.createObjectURL(blob);
+    return lastTtsBlobUrl;
+}
+
+async function speakText(text, options = {}) {
+    try {
+        if (!text || typeof text !== 'string') {
+            console.warn('speakText called with invalid text:', text);
+            return false;
+        }
+        const url = await fetchMurfTts(text, options);
+        ttsAudioElement.src = url;
+        // Try autoplay. If blocked, the caller should show a Listen button (we add it anyway).
+        try { await ttsAudioElement.play(); } catch (e) { /* Autoplay likely blocked */ }
+        return true;
+    } catch (err) {
+        console.error('TTS error:', err);
+        showNotification('Unable to play voice. Use the Listen button.', 'warning');
+        return false;
+    }
+}
+
+function attachListenButton(container, getTextFn) {
+    if (!container) return;
+    // Remove any previous button
+    const existing = container.querySelector('.tts-listen-btn');
+    if (existing) existing.remove();
+
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline-secondary btn-sm tts-listen-btn mt-2';
+    btn.type = 'button';
+    btn.innerHTML = '<span style="font-size:14px">🔊</span> Listen';
+    btn.addEventListener('click', async () => {
+        const text = getTextFn();
+        if (text) await speakText(text);
+    });
+    container.appendChild(btn);
+}
+
+// Expose TTS helpers to global scope in case of scoping differences
+window.speakText = speakText;
+window.attachListenButton = attachListenButton;
+window.wireExplicitListenButton = wireExplicitListenButton;
+
+// Also expose a simple hook to show explicit buttons if present in templates
+function wireExplicitListenButton(buttonId, getTextFn) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    btn.style.display = 'inline-block';
+    btn.addEventListener('click', async () => {
+        const text = getTextFn();
+        if (text) await speakText(text);
+    });
 }
 
 function updateActiveNavigation() {

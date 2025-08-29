@@ -476,6 +476,44 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script>
+        // TTS Welcome Greeting
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if this is a fresh login (user name in session)
+            const userName = '{{ session.get("user_name", "") }}';
+            if (userName && userName.trim()) {
+                // Show loading indicator and start TTS immediately
+                const welcomeMessage = `Welcome back, ${userName}! You're now logged into VetTrack AI.`;
+                
+                // Show a subtle loading indicator
+                const loadingToast = document.createElement('div');
+                loadingToast.className = 'position-fixed top-0 end-0 p-3';
+                loadingToast.style.zIndex = '9999';
+                loadingToast.innerHTML = `
+                    <div class="toast show" role="alert">
+                        <div class="toast-body">
+                            <i class="fas fa-volume-up text-primary me-2"></i>
+                            Playing welcome message...
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(loadingToast);
+                
+                // Start TTS immediately
+                speakText(welcomeMessage).then(() => {
+                    // Remove loading indicator after TTS completes
+                    setTimeout(() => {
+                        if (loadingToast.parentNode) {
+                            loadingToast.remove();
+                        }
+                    }, 2000);
+                });
+                
+                // Clear the session name so it doesn't repeat on refresh
+                fetch('/api/clear_welcome_session', { method: 'POST' });
+            }
+        });
+    </script>
+    <script>
         // Run on dashboard load
         document.addEventListener('DOMContentLoaded', function () {
             loadDashboardData();

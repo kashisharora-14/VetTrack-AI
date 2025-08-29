@@ -148,6 +148,10 @@
                         <div id="resultsContent">
                             <!-- Results will be populated here -->
                         </div>
+                        <div id="ttsControlsSymptom" class="mt-2"></div>
+                        <button id="listenBtnSymptom" type="button" class="btn btn-outline-secondary btn-sm mt-2" style="display:none">
+                            <span style="font-size:14px">🔊</span> Listen
+                        </button>
 
                         <div class="mt-4 p-3 bg-light rounded">
                             <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Important
@@ -179,7 +183,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=tts1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
         loadPetsForSelect();
@@ -364,6 +368,23 @@
         }
 
         document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+        // ---- TTS Integration ----
+        const textForTts = (() => {
+            const diag = Array.isArray(diagnosis) ? diagnosis.join(', ') : String(diagnosis);
+            const causesText = (causes || []).join(', ');
+            return `Here are your pet's symptom analysis results. The preliminary diagnosis suggests: ${diag}. The urgency level is ${urgencyLevel}. My recommendations are: ${recommendation}. Possible causes include: ${causesText}. Please consult with your veterinarian for professional medical advice.`;
+        });
+        
+        // Show and wire the Listen button
+        const listenBtn = document.getElementById('listenBtnSymptom');
+        if (listenBtn) {
+            listenBtn.style.display = 'inline-block';
+            listenBtn.onclick = () => { speakText(textForTts()); };
+        }
+        
+        // Attempt autoplay after content visible
+        speakText(textForTts());
     }
 
     function startConsultation() {

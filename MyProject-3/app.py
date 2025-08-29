@@ -16,6 +16,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
+import base64
+import requests
+from dotenv import load_dotenv
 
 from models import db, User, PetProfile, HealthHistory, Reminder,Consultation
 from gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
@@ -25,6 +28,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 class Base(DeclarativeBase):
     pass
+
+# Load .env so MURF_API_KEY and others are available locally
+load_dotenv()
 
 # Create Flask app
 app = Flask(__name__)
@@ -257,6 +263,8 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             session['user_id'] = user.id
+            # Store user name in session for TTS greeting
+            session['user_name'] = user.full_name
             return redirect(url_for("dashboard"))
         else:
             return render_template("login.html", login_error="Invalid email or password")
@@ -369,6 +377,75 @@ def get_diagnosis_explanation():
                 }
             })
 
+
+@app.route('/api/tts_generate', methods=['POST'])
+def tts_generate():
+    """Generate TTS audio using Murf API and return base64 audio for playback."""
+    try:
+        data = request.get_json(silent=True) or {}
+        text = (data.get('text') or '').strip()
+        voice_id = data.get('voice_id') or 'en-US-natalie'
+        audio_format = data.get('format') or 'MP3'
+
+        if not text:
+            return jsonify({'success': False, 'error': 'Text is required'}), 400
+
+        murf_api_key = os.environ.get('MURF_API_KEY')
+        if not murf_api_key:
+            return jsonify({'success': False, 'error': 'MURF_API_KEY not configured on server'}), 500
+
+        murf_url = 'https://api.murf.ai/v1/speech/generate'
+        headers = {
+            'Content-Type': 'application/json',
+            'api-key': murf_api_key
+        }
+        payload = {
+            'text': text,
+            'voiceId': voice_id,
+            'format': audio_format,
+            'sampleRate': 24000
+        }
+
+        murf_resp = requests.post(murf_url, headers=headers, json=payload, timeout=30)
+        if murf_resp.status_code != 200:
+            return jsonify({'success': False, 'error': f'Murf error: {murf_resp.text}'}), 502
+
+        murf_json = murf_resp.json()
+        audio_file_url = murf_json.get('audioFile') or murf_json.get('audio_file')
+        if not audio_file_url:
+            return jsonify({'success': False, 'error': 'No audio file URL returned by Murf'}), 502
+
+        audio_resp = requests.get(audio_file_url, timeout=30)
+        if audio_resp.status_code != 200:
+            return jsonify({'success': False, 'error': 'Failed to download audio from Murf'}), 502
+
+        audio_bytes = audio_resp.content
+        audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
+
+        mime = 'audio/mpeg' if audio_format.upper() in ['MP3', 'MPEG', 'MPG'] else 'audio/wav'
+        return jsonify({'success': True, 'audio_b64': audio_b64, 'mime': mime})
+    except Exception as e:
+        logging.error(f"Error generating TTS: {e}")
+        logging.error(traceback.format_exc())
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/tts_status', methods=['GET'])
+def tts_status():
+    try:
+        key_present = bool(os.environ.get('MURF_API_KEY'))
+        return jsonify({'success': True, 'murf_key_present': key_present})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/clear_welcome_session', methods=['POST'])
+def clear_welcome_session():
+    """Clear the welcome session after TTS greeting"""
+    try:
+        if 'user_name' in session:
+            del session['user_name']
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route("/api/pet/<int:pet_id>/recent-history", methods=["GET"])
 def get_recent_history(pet_id):

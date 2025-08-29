@@ -146,6 +146,10 @@
                                 <div id="resultsContent">
                                     <!-- Results will be populated here -->
                                 </div>
+                                <div id="ttsControlsImage" class="mt-2"></div>
+                                <button id="listenBtnImage" type="button" class="btn btn-outline-secondary btn-sm mt-2" style="display:none">
+                                    <span style="font-size:14px">🔊</span> Listen
+                                </button>
                             </div>
                         </div>
 
@@ -198,7 +202,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=tts1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             loadPetsForSelect();
@@ -419,6 +423,22 @@ ${(possibleCauses.length || analysis.possible_causes?.length) ? `
 
             // Scroll
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+            // ---- TTS Integration ----
+            const textForTts = (() => {
+                const diag = cleanDiagnosis.join(', ') || 'No clear diagnosis';
+                return `Here are your pet's photo analysis results. The AI diagnosis indicates: ${diag}. The urgency level is ${urgency}. The severity assessment shows ${severity}. The condition likelihood is ${likelihood}. My recommendations are: ${recommendation}. Please consult with your veterinarian for professional medical advice.`;
+            });
+            
+            // Show and wire the Listen button
+            const listenBtn = document.getElementById('listenBtnImage');
+            if (listenBtn) {
+                listenBtn.style.display = 'inline-block';
+                listenBtn.onclick = () => { speakText(textForTts()); };
+            }
+            
+            // Attempt autoplay after results render
+            speakText(textForTts());
         }
 
         function startConsultation() {
