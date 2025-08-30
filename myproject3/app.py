@@ -47,17 +47,41 @@ os.makedirs(instance_dir, exist_ok=True)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
 
 
-# Database configuration
-db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "pet_health.db"))
+# # Database configuration
+# db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "pet_health.db"))
 
-# Prefer DATABASE_URL if set (for production), otherwise use local SQLite file
+
+# db_file = os.path.join(instance_dir, "pet_health.db")
+
+
+# # Prefer DATABASE_URL if set (for production), otherwise use local SQLite file
+# env_db = os.environ.get("DATABASE_URL")
+# if env_db and "memory" not in env_db:
+#     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
+# else:
+#     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+
+# app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
+
+# Ensure instance folder exists (already done above, so safe)
+# instance_dir = os.path.join(os.path.dirname(__file__), "instance")
+# os.makedirs(instance_dir, exist_ok=True)
+
+# SQLite file path
+db_file = os.path.join(instance_dir, "pet_health.db")
+
+# Use DATABASE_URL from environment if present (Render production)
 env_db = os.environ.get("DATABASE_URL")
-if env_db and "memory" not in env_db:
+if env_db:
     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    # fallback to local SQLite absolute path
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_file}"
 
+# SQLAlchemy options
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
+
+
 
 # Debug print (helpful for checking which DB is used)
 print("=== DATABASE FILE IN USE ===")
