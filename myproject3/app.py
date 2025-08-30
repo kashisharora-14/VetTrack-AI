@@ -930,6 +930,33 @@ def upload_image():
         if not pet:
             return jsonify({'success': False, 'error': 'Pet not found'}), 404
 
+        # Read file content for hashing
+        file_content = file.read()
+        file.seek(0)  # Reset file pointer for saving
+        
+        # Generate hash of the image content
+        import hashlib
+        image_hash = hashlib.md5(file_content).hexdigest()
+        
+        # Check if we've analyzed this exact image before
+        existing_analysis = check_image_analysis_cache(image_hash, pet_id, description)
+        if existing_analysis:
+            # Save the image with a new filename but return cached analysis
+            filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            file.save(filepath)
+            
+            # Create new health history entry with cached analysis
+            create_health_history_entry(pet_id, description, existing_analysis, filename)
+            
+            return jsonify({
+                'success': True,
+                'analysis': existing_analysis,
+                'image_url': f"static/uploads/{filename}",
+                'cached': True
+            })
+
         # Save uploaded image
         filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -947,25 +974,11 @@ def upload_image():
             logging.warning("Empty or invalid AI diagnosis — not saving to DB.")
             return jsonify({'success': False, 'error': 'Empty or invalid AI analysis result'}), 400
 
-        # Normalize diagnosis as a list
-        diagnosis = analysis["diagnosis"]
-        if isinstance(diagnosis, str):
-            diagnosis = [diagnosis]
-
-        possible_causes = analysis.get("possible_causes", [])
-        # Save analysis to health history
-        history_entry = HealthHistory(
-            pet_id=pet_id,
-            date=datetime.utcnow(),
-            symptoms=f"Image analysis: {description}" if description else "Image analysis",
-            diagnosis=json.dumps(diagnosis),
-            recommendation=analysis.get("recommendation", ""),
-            urgency_level=analysis.get("urgency_level", "Not Assessed"),
-             possible_causes=json.dumps(possible_causes)   # ✅ now defined
-        )
-
-        db.session.add(history_entry)
-        db.session.commit()
+        # Cache the analysis result
+        cache_image_analysis(image_hash, pet_id, description, analysis)
+        
+        # Create health history entry
+        create_health_history_entry(pet_id, description, analysis, filename)
 
 
         condition_likelihood = (
@@ -976,15 +989,16 @@ def upload_image():
 
         warning_item = ""
 
-# Check if diagnosis mentions species mismatch or wrong animal
+        # Check if diagnosis mentions species mismatch or wrong animal
         if any("not a dog" in d.lower() or "different species" in d.lower() for d in analysis.get("diagnosis", [])):
             warning_item = "⚠ The uploaded image does not appear to match your pet (species mismatch)."
+        
         # Build response (⚡ alias severity = urgency_level)
         response_data = {
-            "diagnosis": diagnosis,
+            "diagnosis": analysis.get("diagnosis", []),
             "urgency_level": analysis.get("urgency_level", "Not Assessed"),
             "severity": analysis.get("urgency_level", "Not Assessed"),  # 👈 alias
-            "possible_causes": possible_causes,   # ✅ fixed
+            "possible_causes": analysis.get("possible_causes", []),   # ✅ fixed
             "recommendation": analysis.get("recommendation", "No recommendation"),
              "conditionLikelihood": condition_likelihood,   # camelCase
              "condition_likelihood": condition_likelihood,   # snake_case
@@ -1048,6 +1062,109 @@ def start_consultation():
     except Exception as e:
         logging.error(f"Error starting consultation: {e}")
         return jsonify({'success': False, 'error': str(e)}), 400
+
+
+# Helper functions for image analysis caching
+def check_image_analysis_cache(image_hash, pet_id, description):
+    """
+    Check if we have a cached analysis for this exact image.
+    Returns the cached analysis if found, None otherwise.
+    """
+    try:
+        # Look for existing health history entries with the same image hash
+        # We'll store the hash in the symptoms field for now (could be improved with a separate table)
+        cache_key = f"ImageHash:{image_hash}"
+        
+        # Check if we have any recent analysis with this hash
+        existing_entry = HealthHistory.query.filter(
+            HealthHistory.symptoms.like(f"%{cache_key}%"),
+            HealthHistory.pet_id == pet_id
+        ).order_by(HealthHistory.date.desc()).first()
+        
+        if existing_entry:
+            # Extract the cached analysis from the existing entry
+            diagnosis = json.loads(existing_entry.diagnosis) if existing_entry.diagnosis else []
+            possible_causes = json.loads(existing_entry.possible_causes) if existing_entry.possible_causes else []
+            
+            return {
+                "diagnosis": diagnosis,
+                "urgency_level": existing_entry.urgency_level,
+                "severity": existing_entry.urgency_level,
+                "recommendation": existing_entry.recommendation,
+                "possible_causes": possible_causes,
+                "condition_likelihood": "Cached Analysis"
+            }
+        
+        return None
+    except Exception as e:
+        logging.error(f"Error checking image cache: {e}")
+        return None
+
+
+def cache_image_analysis(image_hash, pet_id, description, analysis):
+    """
+    Cache the analysis result for future use.
+    """
+    try:
+        # Store the hash in the symptoms field for caching
+        cache_key = f"ImageHash:{image_hash}"
+        symptoms = f"Image analysis: {description} {cache_key}" if description else f"Image analysis {cache_key}"
+        
+        # Normalize diagnosis as a list
+        diagnosis = analysis["diagnosis"]
+        if isinstance(diagnosis, str):
+            diagnosis = [diagnosis]
+
+        possible_causes = analysis.get("possible_causes", [])
+        
+        # Save analysis to health history with cache key
+        history_entry = HealthHistory(
+            pet_id=pet_id,
+            date=datetime.utcnow(),
+            symptoms=symptoms,
+            diagnosis=json.dumps(diagnosis),
+            recommendation=analysis.get("recommendation", ""),
+            urgency_level=analysis.get("urgency_level", "Not Assessed"),
+            possible_causes=json.dumps(possible_causes)
+        )
+
+        db.session.add(history_entry)
+        db.session.commit()
+        
+        logging.info(f"Cached image analysis for hash: {image_hash}")
+    except Exception as e:
+        logging.error(f"Error caching image analysis: {e}")
+
+
+def create_health_history_entry(pet_id, description, analysis, filename):
+    """
+    Create a health history entry from analysis results.
+    """
+    try:
+        # Normalize diagnosis as a list
+        diagnosis = analysis["diagnosis"]
+        if isinstance(diagnosis, str):
+            diagnosis = [diagnosis]
+
+        possible_causes = analysis.get("possible_causes", [])
+        
+        # Save analysis to health history
+        history_entry = HealthHistory(
+            pet_id=pet_id,
+            date=datetime.utcnow(),
+            symptoms=f"Image analysis: {description}" if description else "Image analysis",
+            diagnosis=json.dumps(diagnosis),
+            recommendation=analysis.get("recommendation", ""),
+            urgency_level=analysis.get("urgency_level", "Not Assessed"),
+            possible_causes=json.dumps(possible_causes)
+        )
+
+        db.session.add(history_entry)
+        db.session.commit()
+        
+        logging.info(f"Created health history entry for pet {pet_id}")
+    except Exception as e:
+        logging.error(f"Error creating health history entry: {e}")
 
 
 if __name__ == '__main__':
