@@ -20,7 +20,7 @@ import base64
 import requests
 from dotenv import load_dotenv
 
-from models import db, User, PetProfile, HealthHistory, Reminder,Consultation
+from .models import db, User, PetProfile, HealthHistory, Reminder,Consultation
 from gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
 
 # Setup logging
