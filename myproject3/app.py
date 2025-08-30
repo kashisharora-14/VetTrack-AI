@@ -11,7 +11,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import string
 from flask_login import login_required, LoginManager, login_user, logout_user, current_user
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -20,8 +19,8 @@ import base64
 import requests
 from dotenv import load_dotenv
 
-from .models import db, User, PetProfile, HealthHistory, Reminder,Consultation
-from gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
+from myproject3.models import db, User, PetProfile, HealthHistory, Reminder,Consultation
+from myproject3.gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
