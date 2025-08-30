@@ -11,6 +11,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import string
 from flask_login import login_required, LoginManager, login_user, logout_user, current_user
 from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -19,8 +20,8 @@ import base64
 import requests
 from dotenv import load_dotenv
 
-from myproject3.models import db, User, PetProfile, HealthHistory, Reminder,Consultation
-from myproject3.gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
+from models import db, User, PetProfile, HealthHistory, Reminder,Consultation
+from gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -47,41 +48,17 @@ os.makedirs(instance_dir, exist_ok=True)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
 
 
-# # Database configuration
-# db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "pet_health.db"))
+# Database configuration
+db_path = os.path.join(os.path.dirname(__file__), "instance", "pet_health.db")
 
-
-# db_file = os.path.join(instance_dir, "pet_health.db")
-
-
-# # Prefer DATABASE_URL if set (for production), otherwise use local SQLite file
-# env_db = os.environ.get("DATABASE_URL")
-# if env_db and "memory" not in env_db:
-#     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
-# else:
-#     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
-
-# app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
-
-# Ensure instance folder exists (already done above, so safe)
-# instance_dir = os.path.join(os.path.dirname(__file__), "instance")
-# os.makedirs(instance_dir, exist_ok=True)
-
-# SQLite file path
-db_file = os.path.join(instance_dir, "pet_health.db")
-
-# Use DATABASE_URL from environment if present (Render production)
+# Prefer DATABASE_URL if set (for production), otherwise use local SQLite file
 env_db = os.environ.get("DATABASE_URL")
-if env_db:
+if env_db and "memory" not in env_db:
     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
 else:
-    # fallback to local SQLite absolute path
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_file}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
 
-# SQLAlchemy options
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
-
-
 
 # Debug print (helpful for checking which DB is used)
 print("=== DATABASE FILE IN USE ===")
@@ -96,13 +73,7 @@ db.init_app(app)
 
 # Ensure tables exist without deleting existing data
 with app.app_context():
-    try:
-        db.create_all()
-        print("Database tables ensured.")
-    except Exception as e:
-        import traceback
-        print("Error creating database:", e)
-        traceback.print_exc()
+    db.create_all()
 
 
 # =====================
