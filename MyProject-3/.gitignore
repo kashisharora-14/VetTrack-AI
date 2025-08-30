@@ -58,6 +58,6 @@ ngrok.exe
 # ----------------------
 # Project-specific
 # ----------------------
-requirements.txt
+
 .replit
 .env.example
