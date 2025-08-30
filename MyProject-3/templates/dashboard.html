@@ -24,8 +24,8 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="#features">Services</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="navigateToSection('features')">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="navigateToSection('about')">About</a></li>
 
                     {% if user %}
                     <li class="nav-item dropdown">
@@ -38,7 +38,7 @@
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}" onclick="clearReminderSession()">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                                 </a></li>
                         </ul>
@@ -182,6 +182,9 @@
                                             <div class="text-muted small fw-medium text-uppercase mb-1">Pending
                                                 Reminders</div>
                                             <div class="h3 mb-0 fw-bold text-warning" id="pendingReminders">0</div>
+                                            <button class="btn btn-sm btn-outline-warning mt-2" onclick="announceRemindersManually()" id="announceBtn" style="display: none;">
+                                                <i class="fas fa-volume-up me-1"></i>Announce & Go to Wellness
+                                            </button>
                                         </div>
                                         <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center"
                                             style="width: 48px; height: 48px;">
@@ -545,6 +548,14 @@
             });
         });
 
+        // Flag to prevent multiple announcements - use sessionStorage to persist across page loads
+        let hasAnnouncedReminders = sessionStorage.getItem('hasAnnouncedReminders') === 'true';
+
+        // Reset flag when page is refreshed or navigated to
+        window.addEventListener('beforeunload', function() {
+            // Don't reset the flag on page unload - keep it for the session
+        });
+
         // Dashboard counters
         function loadDashboardData() {
             // Pets count
@@ -556,13 +567,33 @@
                     }
                 });
 
-            // Pending reminders count
+            // Pending reminders count and announcement
             fetch('/api/get_reminders')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         const pending = data.reminders.filter(r => !r.completed).length;
                         document.getElementById('pendingReminders').textContent = pending;
+                        
+                        // Show/hide announce button based on pending reminders
+                        const announceBtn = document.getElementById('announceBtn');
+                        if (pending > 0) {
+                            announceBtn.style.display = 'inline-block';
+                            // Announce pending reminders only once per session
+                            if (!hasAnnouncedReminders) {
+                                setTimeout(() => {
+                                    // Check if no audio is currently playing before announcing
+                                    const audioElement = document.querySelector('audio');
+                                    if (!audioElement || audioElement.paused) {
+                                        announcePendingReminders(data.reminders.filter(r => !r.completed));
+                                        hasAnnouncedReminders = true;
+                                        sessionStorage.setItem('hasAnnouncedReminders', 'true');
+                                    }
+                                }, 3000); // 3 second delay
+                            }
+                        } else {
+                            announceBtn.style.display = 'none';
+                        }
                     }
                 });
 
@@ -574,6 +605,138 @@
                         document.getElementById('totalRecords').textContent = data.health_history.length;
                     }
                 });
+        }
+
+        // Function to announce pending reminders using Murf TTS
+        function announcePendingReminders(pendingReminders) {
+            if (!pendingReminders || pendingReminders.length === 0) return;
+            
+            const announcementText = createAnnouncementText(pendingReminders);
+            
+            // Use Murf TTS to announce the reminders
+            speakText(announcementText, { voiceId: 'en-US-natalie' });
+        }
+
+        // Manual announcement function
+        function announceRemindersManually() {
+            const announceBtn = document.getElementById('announceBtn');
+            const originalText = announceBtn.innerHTML;
+            
+            // Set flag to prevent automatic announcement
+            hasAnnouncedReminders = true;
+            sessionStorage.setItem('hasAnnouncedReminders', 'true');
+            
+            // Stop any currently playing audio
+            const audioElement = document.querySelector('audio');
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+            }
+            
+            fetch('/api/get_reminders')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const pendingReminders = data.reminders.filter(r => !r.completed);
+                        if (pendingReminders.length > 0) {
+                            // Show announcing message
+                            announceBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Announcing...';
+                            announceBtn.disabled = true;
+                            
+                            // Create announcement text
+                            const announcementText = createAnnouncementText(pendingReminders);
+                            
+                            // Announce and wait for completion
+                            speakText(announcementText, { voiceId: 'en-US-natalie' }).then(() => {
+                                // Wait for audio to finish playing
+                                const audioElement = document.querySelector('audio');
+                                if (audioElement) {
+                                    audioElement.addEventListener('ended', function onEnded() {
+                                        audioElement.removeEventListener('ended', onEnded);
+                                        // Show redirect message
+                                        announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
+                                        setTimeout(() => {
+                                            window.location.href = '/wellness';
+                                        }, 1500); // Give user time to see the message
+                                    });
+                                    
+                                    // Fallback: if audio doesn't end properly, redirect after 8 seconds
+                                    setTimeout(() => {
+                                        if (announceBtn.innerHTML.includes('Announcing')) {
+                                            announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
+                                            setTimeout(() => {
+                                                window.location.href = '/wellness';
+                                            }, 1500);
+                                        }
+                                    }, 8000);
+                                } else {
+                                    // Fallback if no audio element found
+                                    setTimeout(() => {
+                                        announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
+                                        setTimeout(() => {
+                                            window.location.href = '/wellness';
+                                        }, 1500);
+                                    }, 3000);
+                                }
+                            });
+                        } else {
+                            speakText('You have no pending reminders at this time.', { voiceId: 'en-US-natalie' });
+                        }
+                    }
+                })
+                .catch(error => {
+                    // Reset button if there's an error
+                    announceBtn.innerHTML = originalText;
+                    announceBtn.disabled = false;
+                });
+        }
+
+        // Helper function to create announcement text
+        function createAnnouncementText(pendingReminders) {
+            if (!pendingReminders || pendingReminders.length === 0) return '';
+            
+            const now = new Date();
+            const overdue = pendingReminders.filter(r => new Date(r.due_date) < now);
+            const upcoming = pendingReminders.filter(r => new Date(r.due_date) >= now);
+            
+            let announcementText = '';
+            
+            if (overdue.length > 0) {
+                announcementText += `You have ${overdue.length} overdue reminder${overdue.length > 1 ? 's' : ''} for your pets. `;
+                
+                // Add specific overdue reminders (limit to 3 to keep it concise)
+                const overdueDetails = overdue.slice(0, 3).map(r => r.title).join(', ');
+                if (overdueDetails) {
+                    announcementText += `Overdue tasks include: ${overdueDetails}. `;
+                }
+            }
+            
+            if (upcoming.length > 0) {
+                announcementText += `You have ${upcoming.length} upcoming reminder${upcoming.length > 1 ? 's' : ''} scheduled. `;
+                
+                // Add specific upcoming reminders (limit to 3 to keep it concise)
+                const upcomingDetails = upcoming.slice(0, 3).map(r => r.title).join(', ');
+                if (upcomingDetails) {
+                    announcementText += `Upcoming tasks include: ${upcomingDetails}. `;
+                }
+            }
+            
+            announcementText += 'You will be redirected to the wellness page to manage your reminders.';
+            
+            return announcementText;
+        }
+
+        // Function to clear reminder session storage (called on logout)
+        function clearReminderSession() {
+            sessionStorage.removeItem('hasAnnouncedReminders');
+        }
+
+        // Function to navigate to homepage sections
+        function navigateToSection(sectionId) {
+            // Store the section to scroll to in sessionStorage
+            sessionStorage.setItem('scrollToSection', sectionId);
+            // Navigate to homepage
+            window.location.href = "{{ url_for('index') }}";
         }
 
         // Load pets into a specific container

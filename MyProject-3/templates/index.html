@@ -763,6 +763,27 @@
                 sessionStorage.setItem('redirectAfterLogin', targetUrl);
             }
         }
+
+        // Handle section scrolling when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there's a section to scroll to (set from dashboard)
+            const scrollToSection = sessionStorage.getItem('scrollToSection');
+            if (scrollToSection) {
+                // Clear the sessionStorage
+                sessionStorage.removeItem('scrollToSection');
+                
+                // Wait a bit for the page to fully load, then scroll
+                setTimeout(() => {
+                    const targetElement = document.getElementById(scrollToSection);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }, 500); // Wait 500ms for page to load
+            }
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

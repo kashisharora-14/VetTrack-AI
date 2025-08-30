@@ -19,11 +19,16 @@ A comprehensive Flask-based web application that combines artificial intelligenc
 ### 📱 User Experience
 - **Personalized Dashboard**: User-specific pet overview and health statistics
 - **Voice Greetings**: Personalized TTS welcome messages upon login
+- **Voice Reminder Notifications**: Audio announcements for pending pet care tasks
+- **Smart Audio Management**: Prevents duplicate announcements and ensures complete voice playback
 - **Responsive Design**: Mobile-friendly interface with Bootstrap 5
 - **Real-time Updates**: Live health history and reminder tracking
 
 ### 🔔 Smart Notifications
 - **Health Reminders**: Vaccination, medication, and checkup scheduling
+- **Voice Reminder Announcements**: Murf TTS-powered voice notifications for pending pet reminders
+- **Automatic Announcements**: Voice alerts when visiting dashboard or wellness pages
+- **Manual Announcement Controls**: On-demand voice reminders with auto-redirect to wellness page
 - **Urgency Alerts**: Immediate notifications for high-priority health concerns
 - **Progress Tracking**: Completion status for health tasks and appointments
 
@@ -156,6 +161,27 @@ gunicorn -w 4 -b 0.0.0.0:5000 main:app
 - **Set Reminders**: Schedule vaccinations, medications, and checkups
 - **Export Reports**: Generate consultation summaries for veterinarians
 
+### Voice Reminder System
+1. **Automatic Announcements**: 
+   - Dashboard announces pending reminders 3 seconds after page load
+   - Wellness page announces pending reminders 1 second after page load
+   - Voice includes count of overdue and upcoming reminders with specific task details
+
+2. **Manual Announcement Controls**:
+   - Click "Announce & Go to Wellness" button on dashboard for immediate voice feedback
+   - Button automatically redirects to wellness page after announcement completes
+   - Visual feedback shows announcement progress and redirect status
+
+3. **Voice Confirmations**:
+   - Hear confirmation when completing reminders: "Reminder completed successfully!"
+   - Hear confirmation when adding new reminders: "Reminder added successfully!"
+   - Error handling with voice feedback for failed operations
+
+4. **Smart Audio Management**:
+   - Prevents duplicate announcements
+   - Waits for complete voice playback before redirecting
+   - Stops overlapping audio to ensure clear announcements
+
 ## 🔧 Configuration
 
 ### API Keys Setup
@@ -229,6 +255,7 @@ vettrack-ai/
 - `GET /api/get_health_history` - User's health records
 - `GET /api/get_reminders` - User's health reminders
 - `POST /api/add_reminder` - Create new health reminder
+- `POST /api/complete_reminder/<id>` - Mark reminder as completed
 
 ## 🧪 Testing
 
@@ -237,6 +264,8 @@ vettrack-ai/
 2. **Pet Management**: Add, edit, and view pet profiles
 3. **AI Features**: Test symptom checker and photo analysis
 4. **TTS Integration**: Verify audio playback functionality
+5. **Voice Reminders**: Test automatic and manual reminder announcements
+6. **Reminder Management**: Test adding, completing, and voice confirmations
 
 ### API Testing
 ```bash
@@ -324,6 +353,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Health Monitoring**: IoT device integration for continuous monitoring
 - **Multi-language Support**: Internationalization for global users
 - **Advanced Analytics**: Health trend analysis and predictive insights
+- **Voice Reminder Enhancements**: 
+  - User-configurable voice preferences
+  - Scheduled daily reminder announcements
+  - Push notifications with voice support
+  - Voice selection options for different languages
 
 ---
 
