@@ -1,7 +1,8 @@
 
 # 🐾 VetTrack AI - AI-Powered Pet Health Management System
 
-A comprehensive Flask-based web application that combines artificial intelligence with veterinary care management, featuring AI-powered symptom analysis, photo diagnosis, and intelligent health tracking for pets.
+A Flask-based AI web application that helps pet owners manage health more effectively with AI-driven analysis, photo diagnosis, smart tracking, and Murf-powered voice guidance.
+
 
 ## 💡 Inspiration:  
 This project is deeply personal to me. I once had a pet who suffered from parvovirus.  
