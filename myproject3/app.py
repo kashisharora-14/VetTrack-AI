@@ -48,7 +48,7 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
 
 
 # Database configuration
-db_path = os.path.join(os.path.dirname(__file__), "instance", "pet_health.db")
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "instance", "pet_health.db"))
 
 # Prefer DATABASE_URL if set (for production), otherwise use local SQLite file
 env_db = os.environ.get("DATABASE_URL")
@@ -72,7 +72,13 @@ db.init_app(app)
 
 # Ensure tables exist without deleting existing data
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        print("Database tables ensured.")
+    except Exception as e:
+        import traceback
+        print("Error creating database:", e)
+        traceback.print_exc()
 
 
 # =====================
