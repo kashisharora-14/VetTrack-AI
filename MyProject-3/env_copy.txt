@@ -1,0 +1,5 @@
+SECRET_KEY=your-secret-key
+DEBUG=False
+GEMINI_API_KEY=AIzaSyCY645mfy_3dwm8ByPDjbp6BJlPOIGsgrU
+SESSION_SECRET=your_secret_key_here
+DATABASE_URL=sqlite:///pet_health.db

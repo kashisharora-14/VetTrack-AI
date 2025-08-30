@@ -51,7 +51,8 @@
                                 <select class="form-select" id="petSelect" required>
                                     <option value="">Choose your pet...</option>
                                 </select>
-                                <div class="form-text">Don't see your pet? <a href="#" onclick="window.open('{{ url_for('dashboard') }}', '_blank'); return false;">Add a new pet</a> first.</div>
+                                <div class="form-text">Don't see your pet? <a href="{{ url_for('dashboard') }}" target="_blank">Add a new pet</a>
+                                    first.</div>
                             </div>
 
                             <div class="mb-3">
