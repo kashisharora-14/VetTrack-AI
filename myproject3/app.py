@@ -49,23 +49,23 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
 
 
 # Database configuration
-db_path = os.path.join(os.path.dirname(__file__), "instance", "pet_health.db")
-
-# Prefer DATABASE_URL if set (for production), otherwise use local SQLite file
+# Prefer DATABASE_URL if set (for production), otherwise use local SQLite file with an absolute, OS-safe path
 env_db = os.environ.get("DATABASE_URL")
 if env_db and "memory" not in env_db:
     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    abs_db_path = os.path.abspath(os.path.join(instance_dir, "pet_health.db"))
+    # Normalize backslashes on Windows so SQLAlchemy parses correctly
+    sqlite_uri = "sqlite:///" + abs_db_path.replace("\\", "/")
+    app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
 
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
 
 # Debug print (helpful for checking which DB is used)
-print("=== DATABASE FILE IN USE ===")
-print("Relative path:", db_path)
-print("Absolute path:", os.path.abspath(db_path))
+print("=== DATABASE CONFIG ===")
+print("Instance dir:", instance_dir)
 print("SQLALCHEMY_DATABASE_URI:", app.config["SQLALCHEMY_DATABASE_URI"])
-print("============================")
+print("=======================")
 
 
 # Initialize SQLAlchemy
