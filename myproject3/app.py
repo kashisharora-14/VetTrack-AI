@@ -20,8 +20,24 @@ import base64
 import requests
 from dotenv import load_dotenv
 
-from models import db, User, PetProfile, HealthHistory, Reminder,Consultation
-from gemini import analyze_pet_symptoms, analyze_pet_image, get_diagnosis_explanation_from_gemini
+# Support both package and script execution contexts
+try:
+    from .models import db, User, PetProfile, HealthHistory, Reminder, Consultation
+except ImportError:  # when run as a script (python app.py)
+    from models import db, User, PetProfile, HealthHistory, Reminder, Consultation
+
+try:
+    from .gemini import (
+        analyze_pet_symptoms,
+        analyze_pet_image,
+        get_diagnosis_explanation_from_gemini,
+    )
+except ImportError:  # when run as a script
+    from gemini import (
+        analyze_pet_symptoms,
+        analyze_pet_image,
+        get_diagnosis_explanation_from_gemini,
+    )
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
