@@ -400,6 +400,9 @@
 
             // Scroll
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Force hide loading state again just in case
+            document.getElementById('loadingState').style.display = 'none';
         }
 
         function startConsultation() {

@@ -173,6 +173,12 @@ function showLoadingState(element, originalText = null) {
         </span>
         Loading...
     `;
+    
+    // Show global loading state if it exists
+    const globalLoading = document.getElementById('loadingState');
+    if (globalLoading) {
+        globalLoading.style.display = 'block';
+    }
 }
 
 
@@ -185,6 +191,12 @@ function hideLoadingState(element) {
         element.removeAttribute('data-original-text');
     }
     element.disabled = false;
+    
+    // Hide global loading state if it exists
+    const globalLoading = document.getElementById('loadingState');
+    if (globalLoading) {
+        globalLoading.style.display = 'none';
+    }
 }
 
 // Utility Functions
