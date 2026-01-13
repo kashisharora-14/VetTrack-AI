@@ -39,3 +39,8 @@ outputType = "webview"
 [agent]
 expertMode = true
 
+[userenv]
+
+[userenv.shared]
+GEMINI_API_KEY = "AIzaSyBbXyMCNQQNCoeyxjG1Rt9AFBsa-Jg40sU"
+
