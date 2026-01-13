@@ -119,7 +119,7 @@
                         </form>
 
                         <!-- Loading State -->
-                        <div id="loadingState" class="text-center py-4" style="display: none;">
+                        <div id="loadingState" class="text-center py-4" style="display: none !important;">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Analyzing...</span>
                             </div>
@@ -265,16 +265,16 @@
 
                 // Show loading state
                 const loadingState = document.getElementById('loadingState');
-                loadingState.style.setProperty('display', 'block', 'important');
-                loadingState.style.color = '#007bff';
+                if (loadingState) {
+                    loadingState.className = 'text-center py-4 active-loading';
+                }
                 document.getElementById('resultsSection').style.display = 'none';
                 document.getElementById('severityNotice').style.display = 'none';
 
-                // Safety timeout (force hide after 25s)
+                // Safety timeout
                 let spinnerTimeout = setTimeout(() => {
-                    console.log("Safety timeout: forcing spinner hide...");
                     const ls = document.getElementById('loadingState');
-                    if (ls) ls.style.setProperty('display', 'none', 'important');
+                    if (ls) ls.className = 'loading-overlay-hidden';
                 }, 25000);
 
                 fetch('/api/upload_image', {
@@ -282,14 +282,12 @@
                     body: formData
                 })
                     .then(response => {
-                        console.log("Status:", response.status);
                         if (!response.ok) {
                             return response.json().then(err => { throw new Error(err.error || 'Server error'); });
                         }
                         return response.json();
                     })
                     .then(data => {
-                        console.log("Analysis data:", data);
                         if (data.success) {
                             displayResults(data.analysis, data.image_url);
                         } else {
@@ -301,12 +299,29 @@
                     })
                     .finally(() => {
                         clearTimeout(spinnerTimeout);
+                        
+                        // 1. Force hide the separate loading div
                         const ls = document.getElementById('loadingState');
-                        if (ls) ls.style.setProperty('display', 'none', 'important');
+                        if (ls) {
+                            ls.style.setProperty('display', 'none', 'important');
+                            ls.style.setProperty('visibility', 'hidden', 'important');
+                            ls.className = 'loading-overlay-hidden';
+                        }
 
+                        // 2. Force hide/restore the submit button
                         const button = document.querySelector('#imageForm button[type="submit"]');
                         if (button) {
                             button.disabled = false;
+                            const originalText = button.getAttribute('data-original-text');
+                            if (originalText) {
+                                button.innerHTML = originalText;
+                            } else {
+                                button.innerHTML = '<i class="fas fa-robot me-2"></i>Analyze Photo';
+                            }
+                            // Also ensure the button itself isn't stuck in a loading style
+                            button.classList.remove('active-loading');
+                            // If the button is the one showing "Loading...", we might want to hide it entirely
+                            // or at least ensure it's not the primary focus anymore if results are out.
                         }
                     });
             });
@@ -404,9 +419,22 @@
             // Scroll
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
             
-            // Force hide loading state again just in case
+            // Force hide loading state again
             const ls = document.getElementById('loadingState');
-            if (ls) ls.style.setProperty('display', 'none', 'important');
+            if (ls) {
+                ls.style.setProperty('display', 'none', 'important');
+                ls.style.setProperty('visibility', 'hidden', 'important');
+                ls.style.setProperty('opacity', '0', 'important');
+                ls.className = 'loading-overlay-hidden';
+            }
+
+            // Also restore the button here just in case finally block is skipped or delayed
+            const button = document.querySelector('#imageForm button[type="submit"]');
+            if (button) {
+                button.disabled = false;
+                const originalText = button.getAttribute('data-original-text');
+                if (originalText) button.innerHTML = originalText;
+            }
         }
 
         function startConsultation() {

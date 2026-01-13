@@ -1646,6 +1646,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Loading animations */
+.loading-overlay-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#loadingState {
+    display: none;
+}
+
+#loadingState.active-loading {
+    display: block !important;
+}
+
 .loading-skeleton {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;

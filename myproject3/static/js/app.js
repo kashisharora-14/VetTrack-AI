@@ -177,7 +177,7 @@ function showLoadingState(element, originalText = null) {
     // Show global loading state if it exists
     const globalLoading = document.getElementById('loadingState');
     if (globalLoading) {
-        globalLoading.style.display = 'block';
+        globalLoading.className = 'text-center py-4 active-loading';
     }
 }
 
@@ -196,6 +196,8 @@ function hideLoadingState(element) {
     const globalLoading = document.getElementById('loadingState');
     if (globalLoading) {
         globalLoading.style.setProperty('display', 'none', 'important');
+        globalLoading.style.setProperty('visibility', 'hidden', 'important');
+        globalLoading.className = 'loading-overlay-hidden';
     }
 }
 
