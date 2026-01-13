@@ -147,9 +147,6 @@
                                     <!-- Results will be populated here -->
                                 </div>
                                 <div id="ttsControlsImage" class="mt-2"></div>
-                                <button id="listenBtnImage" type="button" class="btn btn-outline-secondary btn-sm mt-2" style="display:none">
-                                    <span style="font-size:14px">🔊</span> Listen
-                                </button>
                             </div>
                         </div>
 
@@ -284,32 +281,29 @@
                 })
                     .then(response => {
                         console.log("Status:", response.status);
-                        return response.text(); // Just to see the raw output
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.error || 'Server error'); });
+                        }
+                        return response.json();
                     })
-                    .then(text => {
-                        console.log("Raw server response:", text);
-                        try {
-                            const data = JSON.parse(text);
-                            if (data.success) {
-                                displayResults(data.analysis, data.image_url);
-                            } else {
-                                showNotification('Error analyzing image: ' + data.error, 'error');
-                            }
-                        } catch (e) {
-                            console.error("JSON parse error:", e);
-                            showNotification("Server did not return valid JSON", "error");
+                    .then(data => {
+                        console.log("Analysis data:", data);
+                        if (data.success) {
+                            displayResults(data.analysis, data.image_url);
+                        } else {
+                            showNotification('Error analyzing image: ' + (data.error || 'Unknown error'), 'error');
                         }
                     })
                     .catch(error => {
                         showNotification('Error analyzing image: ' + error.message, 'error');
                     })
                     .finally(() => {
+                        clearTimeout(spinnerTimeout);
                         document.getElementById('loadingState').style.display = 'none';
 
                         const button = document.querySelector('#imageForm button[type="submit"]');
                         if (button) {
                             button.disabled = false;
-                            button.innerHTML = button.getAttribute('data-original-text');
                         }
                     });
             });
@@ -423,22 +417,6 @@ ${(possibleCauses.length || analysis.possible_causes?.length) ? `
 
             // Scroll
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
-
-            // ---- TTS Integration ----
-            const textForTts = (() => {
-                const diag = cleanDiagnosis.join(', ') || 'No clear diagnosis';
-                return `Here are your pet's photo analysis results. The AI diagnosis indicates: ${diag}. The urgency level is ${urgency}. The severity assessment shows ${severity}. The condition likelihood is ${likelihood}. My recommendations are: ${recommendation}. Please consult with your veterinarian for professional medical advice.`;
-            });
-            
-            // Show and wire the Listen button
-            const listenBtn = document.getElementById('listenBtnImage');
-            if (listenBtn) {
-                listenBtn.style.display = 'inline-block';
-                listenBtn.onclick = () => { speakText(textForTts()); };
-            }
-            
-            // Attempt autoplay after results render
-            speakText(textForTts());
         }
 
         function startConsultation() {

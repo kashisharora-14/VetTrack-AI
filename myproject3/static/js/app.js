@@ -51,6 +51,7 @@ function updateActiveNavigation() {
 
 // Notification System
 function showNotification(message, type = 'info') {
+    console.log(`Notification (${type}): ${message}`);
     // Remove any existing notifications
     const existingNotifications = document.querySelectorAll('.custom-notification');
     existingNotifications.forEach(notif => notif.remove());

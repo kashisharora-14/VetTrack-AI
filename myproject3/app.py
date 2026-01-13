@@ -661,8 +661,8 @@ def check_symptoms():
             if str(d).strip().lower() not in ["unable to analyze symptoms", "unknown", ""]
         ]
 
-        if not diagnosis:
-            logging.warning("Empty or invalid AI diagnosis — not saving to DB.")
+        if not analysis or not isinstance(analysis, dict) or not analysis.get("diagnosis"):
+            logging.warning("Empty or invalid AI analysis result — not saving to DB.")
             return jsonify({'success': False, 'error': 'Empty or invalid AI analysis result'}), 400
 
         # Put cleaned diagnosis back into analysis
@@ -921,11 +921,8 @@ def upload_image():
         analysis = analyze_pet_image(pet, filepath, description)
 
         # Validate diagnosis
-        if not analysis or not analysis.get("diagnosis") or not any(
-            str(d).strip().lower() not in ["unable to analyze symptoms", "unknown", ""]
-            for d in analysis["diagnosis"]
-        ):
-            logging.warning("Empty or invalid AI diagnosis — not saving to DB.")
+        if not analysis or not isinstance(analysis, dict) or not analysis.get("diagnosis"):
+            logging.warning("Empty or invalid AI analysis result — not saving to DB.")
             return jsonify({'success': False, 'error': 'Empty or invalid AI analysis result'}), 400
 
         # Cache the analysis result
