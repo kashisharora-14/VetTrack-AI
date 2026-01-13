@@ -8,6 +8,64 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: #e9ecef;
+            transform: translateX(-50%);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        .timeline-content {
+            position: relative;
+            width: 45%;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        .timeline-content:hover {
+            transform: translateY(-5px);
+        }
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: 55%;
+        }
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-left: 0;
+        }
+        .timeline-dot {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: #29B6F6;
+            border: 4px solid #fff;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 0 4px rgba(41, 182, 246, 0.2);
+            z-index: 1;
+        }
+        @media (max-width: 768px) {
+            .timeline::before { left: 30px; }
+            .timeline-content { width: calc(100% - 60px); margin-left: 60px !important; }
+            .timeline-dot { left: 30px; }
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -144,18 +202,48 @@
                     </div>
                 </div>
 
-                <div id="historyContainer">
-                    <div id="noSelectionMessage" class="text-center text-muted py-5">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body py-5">
-                                <i class="fas fa-arrow-left fa-4x mb-3 text-primary"></i>
-                                <h4 class="fw-bold">Select a Pet</h4>
-                                <p class="text-muted">Choose a pet from the sidebar to view their complete health history</p>
+                <!-- Health Visualization -->
+                <div id="healthVisualization" style="display: none;">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-white py-3">
+                                    <h6 class="mb-0 fw-bold"><i class="fas fa-chart-line text-primary me-2"></i>Urgency Level Distribution</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="urgencyChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-white py-3">
+                                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-check text-success me-2"></i>Record Activity</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="activityChart" height="200"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="historyCards" class="row g-4" style="display: none;"></div>
+                    <!-- Health Timeline -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-stream text-info me-2"></i>Health Timeline</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary active" id="viewCardsBtn">Cards</button>
+                                <button class="btn btn-outline-secondary" id="viewTimelineBtn">Timeline</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="timelineContainer" class="timeline" style="display: none;"></div>
+                            <div id="historyCards" class="row g-4"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="historyContainer">
 
                     <div id="noHistoryMessage" class="text-center text-muted py-5" style="display: none;">
                         <div class="card shadow-sm border-0">
@@ -199,15 +287,36 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let currentPetId = null;
-        let currentType = "reminder";
-        let timelineData = [];
+        let urgencyChart = null;
+        let activityChart = null;
+        let viewMode = 'cards';
 
         document.addEventListener("DOMContentLoaded", () => {
             const petsList = document.getElementById("petsList");
             const historyCards = document.getElementById("historyCards");
+            const timelineContainer = document.getElementById("timelineContainer");
             const noSelectionMessage = document.getElementById("noSelectionMessage");
             const noHistoryMessage = document.getElementById("noHistoryMessage");
+            const healthVisualization = document.getElementById("healthVisualization");
+
+            // View mode toggles
+            document.getElementById('viewCardsBtn').addEventListener('click', () => setViewMode('cards'));
+            document.getElementById('viewTimelineBtn').addEventListener('click', () => setViewMode('timeline'));
+
+            function setViewMode(mode) {
+                viewMode = mode;
+                document.getElementById('viewCardsBtn').classList.toggle('active', mode === 'cards');
+                document.getElementById('viewTimelineBtn').classList.toggle('active', mode === 'timeline');
+                
+                if (mode === 'cards') {
+                    historyCards.style.display = 'flex';
+                    timelineContainer.style.display = 'none';
+                } else {
+                    historyCards.style.display = 'none';
+                    timelineContainer.style.display = 'block';
+                }
+                renderHistory();
+            }
 
             // Load pets
             async function loadPets() {
@@ -231,7 +340,7 @@
                                     <small class="text-muted">${pet.species} • ${pet.breed}</small>
                                 </div>
                             `;
-                            btn.onclick = () => selectPet(pet);
+                            btn.onclick = (e) => selectPet(pet, e.currentTarget);
                             petsList.appendChild(btn);
                         });
                     } else {
@@ -251,12 +360,12 @@
                 }
             }
 
-            function selectPet(pet) {
+            function selectPet(pet, element) {
                 currentPetId = pet.id;
                 noSelectionMessage.style.display = "none";
-                historyCards.style.display = "flex";
+                healthVisualization.style.display = "block";
                 document.querySelectorAll("#petsList button").forEach(btn => btn.classList.remove("active"));
-                event.currentTarget?.classList.add("active");
+                element.classList.add("active");
                 loadPetHistory();
             }
 
@@ -266,7 +375,8 @@
                     const response = await fetch(`/api/pet/${currentPetId}/full-history`);
                     const data = await response.json();
                     timelineData = data.timeline || [];
-                    renderCards();
+                    updateCharts();
+                    renderHistory();
                 } catch (err) {
                     historyCards.innerHTML = `
                         <div class="col-12">
@@ -277,6 +387,116 @@
                         </div>
                     `;
                 }
+            }
+
+            function updateCharts() {
+                const urgencyData = { 'High': 0, 'Medium': 0, 'Low': 0, 'None': 0 };
+                const activityData = {};
+
+                timelineData.forEach(r => {
+                    // Urgency
+                    if (r.type === 'health') {
+                        const level = r.urgency_level || 'None';
+                        urgencyData[level] = (urgencyData[level] || 0) + 1;
+                    }
+                    
+                    // Activity by month
+                    const month = new Date(r.date).toLocaleString('default', { month: 'short', year: '2-digit' });
+                    activityData[month] = (activityData[month] || 0) + 1;
+                });
+
+                // Urgency Chart
+                if (urgencyChart) urgencyChart.destroy();
+                const uCtx = document.getElementById('urgencyChart').getContext('2d');
+                urgencyChart = new Chart(uCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(urgencyData),
+                        datasets: [{
+                            data: Object.values(urgencyData),
+                            backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#94a3b8']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                // Activity Chart
+                if (activityChart) activityChart.destroy();
+                const aCtx = document.getElementById('activityChart').getContext('2d');
+                const months = Object.keys(activityData).slice(-6);
+                activityChart = new Chart(aCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Records',
+                            data: months.map(m => activityData[m]),
+                            backgroundColor: '#29B6F6'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            function renderHistory() {
+                if (viewMode === 'cards') {
+                    renderCards();
+                } else {
+                    renderTimeline();
+                }
+            }
+
+            function renderTimeline() {
+                const filtered = timelineData.filter(r => r.type === currentType);
+                timelineContainer.innerHTML = "";
+
+                if (!filtered.length) {
+                    noHistoryMessage.style.display = "block";
+                    return;
+                } else {
+                    noHistoryMessage.style.display = "none";
+                }
+
+                filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(record => {
+                    const item = document.createElement("div");
+                    item.className = "timeline-item";
+                    item.innerHTML = `
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content" onclick="showRecordDetails(${JSON.stringify(record).replace(/"/g, '&quot;')})">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-primary fw-bold">${new Date(record.date).toLocaleDateString()}</small>
+                                <i class="${getIconForType(record.type)} text-muted"></i>
+                            </div>
+                            <h6 class="fw-bold">${getTitleForRecord(record)}</h6>
+                            <p class="small text-muted mb-0">${getBriefSummary(record)}</p>
+                        </div>
+                    `;
+                    timelineContainer.appendChild(item);
+                });
+            }
+
+            function getIconForType(type) {
+                if (type === 'health') return 'fas fa-heartbeat';
+                if (type === 'consultation') return 'fas fa-video';
+                return 'fas fa-bell';
+            }
+
+            function getTitleForRecord(record) {
+                if (record.type === 'reminder') return record.title || 'Reminder';
+                if (record.type === 'health') return 'Health Assessment';
+                return 'Vet Consultation';
+            }
+
+            function getBriefSummary(record) {
+                if (record.type === 'health') return record.symptoms || 'No symptoms noted';
+                if (record.type === 'consultation') return record.summary || 'No summary available';
+                return record.completed ? 'Completed' : 'Upcoming';
+            }
+
+            window.showRecordDetails = function(record) {
+                document.getElementById("recordDetails").innerHTML = generateRecordHTML(record);
+                document.getElementById("recordModal").dataset.petId = currentPetId;
+                new bootstrap.Modal(document.getElementById("recordModal")).show();
             }
 
             function renderCards() {
@@ -296,11 +516,7 @@
 
                     const card = document.createElement("div");
                     card.className = "card shadow-sm hover-lift h-100";
-                    card.onclick = () => {
-                        document.getElementById("recordDetails").innerHTML = generateRecordHTML(record);
-                        document.getElementById("recordModal").dataset.petId = currentPetId;
-                        new bootstrap.Modal(document.getElementById("recordModal")).show();
-                    };
+                    card.onclick = () => showRecordDetails(record);
 
                     card.innerHTML = generateRecordHTML(record, true);
                     col.appendChild(card);
