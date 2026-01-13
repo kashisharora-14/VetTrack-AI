@@ -67,14 +67,17 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
 # Database configuration
 # Prefer DATABASE_URL if set (for production), otherwise use local SQLite file with an absolute, OS-safe path
 env_db = os.environ.get("DATABASE_URL")
-if env_db and "memory" not in env_db:
+if env_db:
+    # Handle the 'postgres://' vs 'postgresql://' issue if necessary
+    if env_db.startswith("postgres://"):
+        env_db = env_db.replace("postgres://", "postgresql://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
 else:
     abs_db_path = os.path.abspath(os.path.join(instance_dir, "pet_health.db"))
     # Normalize backslashes on Windows so SQLAlchemy parses correctly
     sqlite_uri = "sqlite:///" + abs_db_path.replace("\\", "/")
     app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
-
+    
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 300, "pool_pre_ping": True}
 
 # Debug print (helpful for checking which DB is used)
