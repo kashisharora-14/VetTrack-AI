@@ -63,3 +63,11 @@ python-dotenv
 reportlab
 requests
 werkzeug
+flask
+flask-login
+flask-sqlalchemy
+google-genai
+python-dotenv
+reportlab
+requests
+werkzeug
