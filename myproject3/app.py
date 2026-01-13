@@ -898,21 +898,27 @@ def upload_image():
         # Check if we've analyzed this exact image before
         existing_analysis = check_image_analysis_cache(image_hash, pet_id, description)
         if existing_analysis:
-            # Save the image with a new filename but return cached analysis
-            filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            file.save(filepath)
+            # Check if the cached analysis was an error
+            is_error = any("Error analyzing image" in str(d) for d in existing_analysis.get("diagnosis", []))
             
-            # Create new health history entry with cached analysis
-            create_health_history_entry(pet_id, description, existing_analysis, filename)
-            
-            return jsonify({
-                'success': True,
-                'analysis': existing_analysis,
-                'image_url': f"static/uploads/{filename}",
-                'cached': True
-            })
+            if not is_error:
+                # Save the image with a new filename but return cached analysis
+                filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                file.save(filepath)
+                
+                # Create new health history entry with cached analysis
+                create_health_history_entry(pet_id, description, existing_analysis, filename)
+                
+                return jsonify({
+                    'success': True,
+                    'analysis': existing_analysis,
+                    'image_url': f"static/uploads/{filename}",
+                    'cached': True
+                })
+            else:
+                logging.info(f"Ignoring cached error analysis for image {image_hash}, re-analyzing...")
 
         # Save uploaded image
         filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
