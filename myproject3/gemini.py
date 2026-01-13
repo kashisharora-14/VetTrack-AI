@@ -275,13 +275,21 @@ def analyze_pet_image(pet, image_path, description=""):
         # Extract text from Gemini response
         try:
             text_content = result["candidates"][0]["content"]["parts"][0]["text"]
+            # Pre-process text to remove common JSON pitfalls from LLMs
+            text_content = text_content.strip()
+            if text_content.startswith("```json"):
+                text_content = text_content[7:]
+            if text_content.endswith("```"):
+                text_content = text_content[:-3]
+            text_content = text_content.strip()
+            
             analysis = json.loads(text_content)
         except (KeyError, IndexError, json.JSONDecodeError) as e:
-            logging.error(f"Error parsing Gemini image response: {e}")
+            logging.error(f"Error parsing Gemini image response: {e}. Raw content: {text_content if 'text_content' in locals() else 'None'}")
             return {
-                "diagnosis": [],
+                "diagnosis": ["Error analyzing image: Empty or invalid AI analysis result"],
                 "urgency_level": "Unknown",
-                "recommendation": "",
+                "recommendation": "Please try uploading a clearer photo or adding more description.",
                 "possible_causes": [],
                 "condition_likelihood": "Unknown"
             }
