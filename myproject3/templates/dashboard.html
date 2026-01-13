@@ -38,7 +38,7 @@
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}" onclick="clearReminderSession()">
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                                 </a></li>
                         </ul>
@@ -182,9 +182,6 @@
                                             <div class="text-muted small fw-medium text-uppercase mb-1">Pending
                                                 Reminders</div>
                                             <div class="h3 mb-0 fw-bold text-warning" id="pendingReminders">0</div>
-                                            <button class="btn btn-sm btn-outline-warning mt-2" onclick="announceRemindersManually()" id="announceBtn" style="display: none;">
-                                                <i class="fas fa-volume-up me-1"></i>Announce & Go to Wellness
-                                            </button>
                                         </div>
                                         <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center"
                                             style="width: 48px; height: 48px;">
