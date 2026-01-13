@@ -3,7 +3,7 @@ run = "python3 MyProject-3/app.py"
 
 [nix]
 channel = "stable-25_05"
-packages = ["zip"]
+packages = ["c-ares", "cacert", "freetype", "glibcLocales", "grpc", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pkg-config", "tcl", "tk", "zip", "zlib"]
 
 [deployment]
 run = ["sh", "-c", "python3 MyProject-3/app.py"]
@@ -11,4 +11,28 @@ run = ["sh", "-c", "python3 MyProject-3/app.py"]
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd myproject3 && python3 app.py"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
