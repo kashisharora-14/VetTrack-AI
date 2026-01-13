@@ -528,60 +528,75 @@
 
         function generateMiniCalendar() {
             const calendar = document.getElementById('miniCalendar');
-
-            // Check if calendar element exists
-            if (!calendar) {
-                console.warn('Mini calendar element not found');
-                return;
-            }
-
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
+            const selectedPetId = document.getElementById('petSelect').value;
 
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            // Fetch history and reminders to mark on calendar
+            Promise.all([
+                fetch('/api/get_history' + (selectedPetId ? `?pet_id=${selectedPetId}` : '')).then(r => r.json()),
+                fetch('/api/get_reminders' + (selectedPetId ? `?pet_id=${selectedPetId}` : '')).then(r => r.json())
+            ]).then(([historyData, remindersData]) => {
+                const historyDates = historyData.success ? historyData.history.map(h => h.date.split('T')[0]) : [];
+                const reminderDates = remindersData.success ? remindersData.reminders.map(r => r.due_date.split('T')[0]) : [];
 
-            calendar.innerHTML = `
-                <div class="text-center mb-2">
-                    <strong>${monthNames[month]} ${year}</strong>
-                </div>
-                <div class="row g-1 text-center small">
-                    <div class="col text-muted">S</div>
-                    <div class="col text-muted">M</div>
-                    <div class="col text-muted">T</div>
-                    <div class="col text-muted">W</div>
-                    <div class="col text-muted">T</div>
-                    <div class="col text-muted">F</div>
-                    <div class="col text-muted">S</div>
-                </div>
-            `;
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const monthName = now.toLocaleString('default', { month: 'short' });
 
-            // Simple calendar grid (placeholder)
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+                let html = `
+                    <div class="text-center mb-2 fw-bold">${monthName} ${year}</div>
+                    <table class="table table-sm table-borderless text-center mb-0" style="font-size: 0.8rem;">
+                        <thead>
+                            <tr>
+                                <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                `;
 
-            let calendarHTML = '';
-            let dayCount = 1;
-
-            for (let week = 0; week < 6; week++) {
-                calendarHTML += '<div class="row g-1 text-center small">';
-                for (let day = 0; day < 7; day++) {
-                    if (week === 0 && day < firstDay) {
-                        calendarHTML += '<div class="col"></div>';
-                    } else if (dayCount <= daysInMonth) {
-                        const isToday = dayCount === now.getDate();
-                        calendarHTML += `<div class="col ${isToday ? 'bg-primary text-white rounded' : ''}">${dayCount}</div>`;
-                        dayCount++;
-                    } else {
-                        calendarHTML += '<div class="col"></div>';
-                    }
+                for (let i = 0; i < firstDay; i++) {
+                    html += '<td></td>';
                 }
-                calendarHTML += '</div>';
-                if (dayCount > daysInMonth) break;
-            }
 
-            calendar.innerHTML += calendarHTML;
+                for (let day = 1; day <= daysInMonth; day++) {
+                    if ((firstDay + day - 1) % 7 === 0 && day > 1) {
+                        html += '</tr><tr>';
+                    }
+                    
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    let cellClass = '';
+                    let dotHtml = '<div class="d-flex justify-content-center gap-1" style="height: 4px; margin-top: 1px;">';
+                    
+                    if (day === now.getDate()) {
+                        cellClass = 'bg-primary text-white rounded-circle';
+                    }
+                    
+                    if (historyDates.includes(dateStr)) {
+                        dotHtml += '<div style="width: 4px; height: 4px; background: #28a745; border-radius: 50%;"></div>';
+                    }
+                    if (reminderDates.includes(dateStr)) {
+                        dotHtml += '<div style="width: 4px; height: 4px; background: #ffc107; border-radius: 50%;"></div>';
+                    }
+                    dotHtml += '</div>';
+
+                    html += `<td class="p-1"><div class="${cellClass}" style="width: 24px; height: 24px; line-height: 24px; margin: 0 auto; cursor: pointer;" title="${dateStr}">${day}</div>${dotHtml}</td>`;
+                }
+
+                html += '</tr></tbody></table>';
+                html += `
+                    <div class="mt-2 small d-flex justify-content-center gap-3">
+                        <span><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i> History</span>
+                        <span><i class="fas fa-circle text-warning me-1" style="font-size: 0.5rem;"></i> Reminders</span>
+                    </div>
+                `;
+                calendar.innerHTML = html;
+            }).catch(err => {
+                console.error('Error generating calendar:', err);
+                calendar.innerHTML = '<p class="text-danger small">Error loading calendar data</p>';
+            });
         }
 
         // Handle reminder type change
