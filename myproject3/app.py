@@ -277,13 +277,20 @@ def login():
         password = request.form.get("password")
 
         user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            session['user_id'] = user.id
-            # Store user name in session for TTS greeting
-            session['user_name'] = user.full_name
-            return redirect(url_for("dashboard"))
+        logging.debug(f"Login attempt for email: {email}")
+        if user:
+            logging.debug(f"User found: {user.email}")
+            if user.check_password(password):
+                logging.debug("Password correct")
+                session['user_id'] = user.id
+                session['user_name'] = user.full_name
+                return redirect(url_for("dashboard"))
+            else:
+                logging.debug("Password incorrect")
         else:
-            return render_template("login.html", login_error="Invalid email or password")
+            logging.debug("User not found")
+        
+        return render_template("login.html", login_error="Invalid email or password")
 
     return render_template("login.html")
 
