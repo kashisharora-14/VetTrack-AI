@@ -264,16 +264,18 @@
                 }
 
                 // Show loading state
-                document.getElementById('loadingState').style.display = 'block';
-                document.getElementById('loadingState').style.color = '#007bff';
+                const loadingState = document.getElementById('loadingState');
+                loadingState.style.setProperty('display', 'block', 'important');
+                loadingState.style.color = '#007bff';
                 document.getElementById('resultsSection').style.display = 'none';
                 document.getElementById('severityNotice').style.display = 'none';
 
-                // Safety timeout (force hide after 20s)
+                // Safety timeout (force hide after 25s)
                 let spinnerTimeout = setTimeout(() => {
                     console.log("Safety timeout: forcing spinner hide...");
-                    document.getElementById('loadingState').style.display = 'none';
-                }, 20000);
+                    const ls = document.getElementById('loadingState');
+                    if (ls) ls.style.setProperty('display', 'none', 'important');
+                }, 25000);
 
                 fetch('/api/upload_image', {
                     method: 'POST',
@@ -299,7 +301,8 @@
                     })
                     .finally(() => {
                         clearTimeout(spinnerTimeout);
-                        document.getElementById('loadingState').style.display = 'none';
+                        const ls = document.getElementById('loadingState');
+                        if (ls) ls.style.setProperty('display', 'none', 'important');
 
                         const button = document.querySelector('#imageForm button[type="submit"]');
                         if (button) {
@@ -402,7 +405,8 @@
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
             
             // Force hide loading state again just in case
-            document.getElementById('loadingState').style.display = 'none';
+            const ls = document.getElementById('loadingState');
+            if (ls) ls.style.setProperty('display', 'none', 'important');
         }
 
         function startConsultation() {

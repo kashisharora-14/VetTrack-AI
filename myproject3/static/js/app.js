@@ -195,7 +195,7 @@ function hideLoadingState(element) {
     // Hide global loading state if it exists
     const globalLoading = document.getElementById('loadingState');
     if (globalLoading) {
-        globalLoading.style.display = 'none';
+        globalLoading.style.setProperty('display', 'none', 'important');
     }
 }
 
