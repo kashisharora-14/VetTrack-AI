@@ -73,8 +73,8 @@ if env_db:
         env_db = env_db.replace("postgres://", "postgresql://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = env_db
 else:
-    abs_db_path = os.path.abspath(os.path.join(instance_dir, "pet_health.db"))
-    # Normalize backslashes on Windows so SQLAlchemy parses correctly
+    # Use a persistent path in the root directory for SQLite
+    abs_db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "pet_health.db"))
     sqlite_uri = "sqlite:///" + abs_db_path.replace("\\", "/")
     app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri
     
