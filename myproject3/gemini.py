@@ -279,12 +279,38 @@ def analyze_pet_image(pet, image_path, description=""):
             text_content = text_content.strip()
             if text_content.startswith("```json"):
                 text_content = text_content[7:]
+            if text_content.startswith("```"):
+                text_content = text_content[3:]
             if text_content.endswith("```"):
                 text_content = text_content[:-3]
             text_content = text_content.strip()
             
-            analysis = json.loads(text_content)
-        except (KeyError, IndexError, json.JSONDecodeError) as e:
+            # Additional cleanup for common LLM hallucinations in JSON
+            # Sometimes models add comments or extra text outside the JSON block
+            if "{" in text_content and "}" in text_content:
+                start_index = text_content.find("{")
+                end_index = text_content.rfind("}") + 1
+                text_content = text_content[start_index:end_index]
+            
+            # Remove potential trailing commas before closing braces/brackets
+            import re
+            text_content = re.sub(r',\s*([\]}])', r'\1', text_content)
+            
+            # Handle the specific error seen in logs where text was inserted inside the JSON array
+            # "furlough \"Septicemia\" is a severe condition..." was likely hallucinated outside the string
+            # Let's try a more aggressive approach if standard JSON load fails
+            try:
+                analysis = json.loads(text_content)
+            except json.JSONDecodeError:
+                # If it still fails, the model might have put extra text in. 
+                # We'll try to find the structure we expect.
+                logging.warning(f"Standard JSON parse failed, attempting recovery on: {text_content[:100]}...")
+                # This is a last resort - try to fix the specific broken array seen in logs
+                # It looks like: "Septicemia" \n text \n ],
+                fixed_text = re.sub(r'("[^"]+")\s*\n\s*[a-zA-Z].*?\n\s*]', r'\1]', text_content, flags=re.DOTALL)
+                analysis = json.loads(fixed_text)
+
+        except (KeyError, IndexError, json.JSONDecodeError, Exception) as e:
             logging.error(f"Error parsing Gemini image response: {e}. Raw content: {text_content if 'text_content' in locals() else 'None'}")
             return {
                 "diagnosis": ["Error analyzing image: Empty or invalid AI analysis result"],
