@@ -362,10 +362,12 @@
 
             function selectPet(pet, element) {
                 currentPetId = pet.id;
-                noSelectionMessage.style.display = "none";
-                healthVisualization.style.display = "block";
+                const noSelectionMessage = document.getElementById("noSelectionMessage");
+                const healthVisualization = document.getElementById("healthVisualization");
+                if (noSelectionMessage) noSelectionMessage.style.display = "none";
+                if (healthVisualization) healthVisualization.style.display = "block";
                 document.querySelectorAll("#petsList button").forEach(btn => btn.classList.remove("active"));
-                element.classList.add("active");
+                if (element) element.classList.add("active");
                 loadPetHistory();
             }
 
@@ -374,26 +376,31 @@
                 try {
                     const response = await fetch(`/api/pet/${currentPetId}/full-history`);
                     const data = await response.json();
-                    timelineData = data.timeline || [];
+                    window.timelineData = data.timeline || [];
                     updateCharts();
                     renderHistory();
                 } catch (err) {
-                    historyCards.innerHTML = `
-                        <div class="col-12">
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Failed to load history. Please try again.
+                    console.error("Error loading history:", err);
+                    const historyCards = document.getElementById("historyCards");
+                    if (historyCards) {
+                        historyCards.innerHTML = `
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Failed to load history. Please try again.
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
             }
 
             function updateCharts() {
+                const dataToAnalyze = window.timelineData || [];
                 const urgencyData = { 'High': 0, 'Medium': 0, 'Low': 0, 'None': 0 };
                 const activityData = {};
 
-                timelineData.forEach(r => {
+                dataToAnalyze.forEach(r => {
                     // Urgency
                     if (r.type === 'health') {
                         const level = r.urgency_level || 'None';
@@ -447,14 +454,19 @@
             }
 
             function renderTimeline() {
-                const filtered = timelineData.filter(r => r.type === currentType);
+                const dataToRender = window.timelineData || [];
+                const filtered = dataToRender.filter(r => r.type === currentType);
+                const timelineContainer = document.getElementById("timelineContainer");
+                const noHistoryMessage = document.getElementById("noHistoryMessage");
+                
+                if (!timelineContainer) return;
                 timelineContainer.innerHTML = "";
 
                 if (!filtered.length) {
-                    noHistoryMessage.style.display = "block";
+                    if (noHistoryMessage) noHistoryMessage.style.display = "block";
                     return;
                 } else {
-                    noHistoryMessage.style.display = "none";
+                    if (noHistoryMessage) noHistoryMessage.style.display = "none";
                 }
 
                 filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(record => {
@@ -500,14 +512,19 @@
             }
 
             function renderCards() {
-                const filtered = timelineData.filter(r => r.type === currentType);
+                const dataToRender = window.timelineData || [];
+                const filtered = dataToRender.filter(r => r.type === currentType);
+                const historyCards = document.getElementById("historyCards");
+                const noHistoryMessage = document.getElementById("noHistoryMessage");
+
+                if (!historyCards) return;
                 historyCards.innerHTML = "";
 
                 if (!filtered.length) {
-                    noHistoryMessage.style.display = "block";
+                    if (noHistoryMessage) noHistoryMessage.style.display = "block";
                     return;
                 } else {
-                    noHistoryMessage.style.display = "none";
+                    if (noHistoryMessage) noHistoryMessage.style.display = "none";
                 }
 
                 filtered.forEach(record => {
