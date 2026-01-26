@@ -1,11 +1,7 @@
 // Helper functions
 function speakText(text) {
-    if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        window.speechSynthesis.speak(utterance);
-    } else {
-        console.warn('Speech synthesis not supported');
-    }
+    // TTS disabled as per user request
+    console.log('Speech disabled:', text);
 }
 
 // PetHealth Pro - Shared JavaScript Functions

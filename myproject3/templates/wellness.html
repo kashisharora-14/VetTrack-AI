@@ -336,8 +336,8 @@
             
             announcementText += 'Please review and complete them to maintain your pets\' health.';
             
-            // Use Murf TTS to announce the reminders
-            speakText(announcementText, { voiceId: 'en-US-natalie' });
+            // TTS disabled as per user request
+            console.log('Announcement (text only):', announcementText);
         }
 
         // Manual announcement function for wellness page
@@ -351,7 +351,7 @@
                         if (pendingReminders.length > 0) {
                             announcePendingReminders(pendingReminders);
                         } else {
-                            speakText('You have no pending reminders at this time.', { voiceId: 'en-US-natalie' });
+                            console.log('No pending reminders at this time.');
                         }
                     }
                 });

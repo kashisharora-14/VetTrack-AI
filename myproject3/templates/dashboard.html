@@ -499,7 +499,7 @@
                 document.body.appendChild(loadingToast);
                 
                 // Start TTS immediately
-                if (typeof speakText === 'function') {
+                if (false && typeof speakText === 'function') {
                     const speechPromise = speakText(welcomeMessage);
                     if (speechPromise && typeof speechPromise.then === 'function') {
                         speechPromise.then(() => {
