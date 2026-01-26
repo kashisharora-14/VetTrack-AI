@@ -113,3 +113,4 @@ python-dotenv
 reportlab
 requests
 werkzeug
+psycopg2-binary

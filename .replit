@@ -44,4 +44,5 @@ integrations = ["python_gemini_ai_integrations:1.0.0"]
 
 [userenv.shared]
 GEMINI_API_KEY = "AIzaSyBbXyMCNQQNCoeyxjG1Rt9AFBsa-Jg40sU"
+NEON_DATABASE_URL = "postgresql://neondb_owner:npg_pjuLtW5aP0iS@ep-damp-darkness-ah0170th-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 

@@ -65,8 +65,8 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
 
 
 # Database configuration
-# Prefer DATABASE_URL if set (for production), otherwise use local SQLite file with an absolute, OS-safe path
-env_db = os.environ.get("DATABASE_URL")
+# Prefer NEON_DATABASE_URL or DATABASE_URL if set, otherwise use local SQLite file
+env_db = os.environ.get("NEON_DATABASE_URL") or os.environ.get("DATABASE_URL")
 if env_db:
     # Handle the 'postgres://' vs 'postgresql://' issue if necessary
     if env_db.startswith("postgres://"):
