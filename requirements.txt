@@ -96,3 +96,10 @@ python-dotenv
 reportlab
 requests
 werkzeug
+flask
+flask-login
+flask-sqlalchemy
+python-dotenv
+reportlab
+requests
+werkzeug
