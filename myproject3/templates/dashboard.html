@@ -499,14 +499,21 @@
                 document.body.appendChild(loadingToast);
                 
                 // Start TTS immediately
-                speakText(welcomeMessage).then(() => {
-                    // Remove loading indicator after TTS completes
-                    setTimeout(() => {
-                        if (loadingToast.parentNode) {
-                            loadingToast.remove();
-                        }
-                    }, 2000);
-                });
+                if (typeof speakText === 'function') {
+                    speakText(welcomeMessage).then(() => {
+                        // Remove loading indicator after TTS completes
+                        setTimeout(() => {
+                            if (loadingToast.parentNode) {
+                                loadingToast.remove();
+                            }
+                        }, 2000);
+                    }).catch(e => {
+                        console.error('TTS error:', e);
+                        if (loadingToast.parentNode) loadingToast.remove();
+                    });
+                } else {
+                    if (loadingToast.parentNode) loadingToast.remove();
+                }
                 
                 // Clear the session name so it doesn't repeat on refresh
                 fetch('/api/clear_welcome_session', { method: 'POST' });
@@ -644,38 +651,47 @@
                             const announcementText = createAnnouncementText(pendingReminders);
                             
                             // Announce and wait for completion
-                            speakText(announcementText, { voiceId: 'en-US-natalie' }).then(() => {
-                                // Wait for audio to finish playing
-                                const audioElement = document.querySelector('audio');
-                                if (audioElement) {
-                                    audioElement.addEventListener('ended', function onEnded() {
-                                        audioElement.removeEventListener('ended', onEnded);
-                                        // Show redirect message
-                                        announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
+                            if (typeof speakText === 'function') {
+                                speakText(announcementText, { voiceId: 'en-US-natalie' }).then(() => {
+                                    // Wait for audio to finish playing
+                                    const audioElement = document.querySelector('audio');
+                                    if (audioElement) {
+                                        audioElement.addEventListener('ended', function onEnded() {
+                                            audioElement.removeEventListener('ended', onEnded);
+                                            // Show redirect message
+                                            announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
+                                            setTimeout(() => {
+                                                window.location.href = '/wellness';
+                                            }, 1500); // Give user time to see the message
+                                        });
+                                        
+                                        // Fallback: if audio doesn't end properly, redirect after 8 seconds
                                         setTimeout(() => {
-                                            window.location.href = '/wellness';
-                                        }, 1500); // Give user time to see the message
-                                    });
-                                    
-                                    // Fallback: if audio doesn't end properly, redirect after 8 seconds
-                                    setTimeout(() => {
-                                        if (announceBtn.innerHTML.includes('Announcing')) {
+                                            if (announceBtn.innerHTML.includes('Announcing')) {
+                                                announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
+                                                setTimeout(() => {
+                                                    window.location.href = '/wellness';
+                                                }, 1500);
+                                            }
+                                        }, 8000);
+                                    } else {
+                                        // Fallback if no audio element found
+                                        setTimeout(() => {
                                             announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
                                             setTimeout(() => {
                                                 window.location.href = '/wellness';
                                             }, 1500);
-                                        }
-                                    }, 8000);
-                                } else {
-                                    // Fallback if no audio element found
-                                    setTimeout(() => {
-                                        announceBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i>Going to Wellness...';
-                                        setTimeout(() => {
-                                            window.location.href = '/wellness';
-                                        }, 1500);
-                                    }, 3000);
-                                }
-                            });
+                                        }, 3000);
+                                    }
+                                }).catch(err => {
+                                    console.error('Announcement error:', err);
+                                    announceBtn.innerHTML = originalText;
+                                    announceBtn.disabled = false;
+                                });
+                            } else {
+                                announceBtn.innerHTML = originalText;
+                                announceBtn.disabled = false;
+                            }
                         } else {
                             speakText('You have no pending reminders at this time.', { voiceId: 'en-US-natalie' });
                         }

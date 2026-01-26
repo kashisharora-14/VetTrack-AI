@@ -176,14 +176,19 @@
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
+                console.log("Geolocation success:", lat, lng);
                 initMap(lat, lng);
                 await fetchNearbyVets(lat, lng);
                 updateStatus('Location Found', 'success');
             }, (error) => {
                 console.error("Geolocation error:", error);
-                alert("Could not get your location. Please search manually.");
+                let msg = "Could not get your location. Please search manually.";
+                if (error.code === 1) msg = "Location access denied. Please allow location access in your browser settings.";
+                else if (error.code === 2) msg = "Location unavailable. Please search manually.";
+                else if (error.code === 3) msg = "Location request timed out. Please try again or search manually.";
+                alert(msg);
                 updateStatus('Location Denied', 'danger');
-            }, { enableHighAccuracy: true, timeout: 5000 });
+            }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
         }
 
         async function searchVets() {
@@ -231,24 +236,28 @@
             const geoapifyUrl = `https://api.geoapify.com/v2/places?categories=${categories}&filter=circle:${lng},${lat},${radius}&bias=proximity:${lng},${lat}&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
             
             // Overpass fallback - refined to target actual veterinary clinics
-            const overpassQuery = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng}););out center;`;
+            const overpassQuery = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng});node["healthcare:speciality"~"veterinary"](around:${radius},${lat},${lng}););out center;`;
             const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
 
             try {
                 let vets = [];
                 if (GEOAPIFY_API_KEY) {
-                    const response = await fetch(geoapifyUrl);
-                    const data = await response.json();
-                    if (data.features && data.features.length > 0) {
-                        vets = data.features.map(f => ({
-                            id: f.properties.place_id,
-                            name: f.properties.name || "Veterinary Clinic",
-                            specialty: "Veterinary Care",
-                            avatar: (f.properties.name || "V").substring(0, 2).toUpperCase(),
-                            lat: f.properties.lat,
-                            lng: f.properties.lon,
-                            address: f.properties.formatted || f.properties.address_line2
-                        }));
+                    try {
+                        const response = await fetch(geoapifyUrl);
+                        const data = await response.json();
+                        if (data.features && data.features.length > 0) {
+                            vets = data.features.map(f => ({
+                                id: f.properties.place_id,
+                                name: f.properties.name || "Veterinary Clinic",
+                                specialty: "Veterinary Care",
+                                avatar: (f.properties.name || "V").substring(0, 2).toUpperCase(),
+                                lat: f.properties.lat,
+                                lng: f.properties.lon,
+                                address: f.properties.formatted || f.properties.address_line2
+                            }));
+                        }
+                    } catch (e) {
+                        console.warn("Geoapify Places API failed, trying Overpass");
                     }
                 }
                 
@@ -271,7 +280,7 @@
                 // Filter out non-vet results if they snuck in (e.g. general clinics)
                 const filteredVets = vets.filter(v => {
                     const lowerName = v.name.toLowerCase();
-                    const isMedical = lowerName.includes("dental") || lowerName.includes("nursing") || lowerName.includes("physio") || lowerName.includes("homoeopathic");
+                    const isMedical = lowerName.includes("dental") || lowerName.includes("nursing") || lowerName.includes("physio") || lowerName.includes("homoeopathic") || lowerName.includes("hospital") && !lowerName.includes("animal") && !lowerName.includes("pet") && !lowerName.includes("vet");
                     const isVet = lowerName.includes("vet") || lowerName.includes("pet") || lowerName.includes("animal");
                     return isVet || !isMedical;
                 });
