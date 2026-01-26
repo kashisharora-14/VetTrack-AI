@@ -1,3 +1,13 @@
+// Helper functions
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+    } else {
+        console.warn('Speech synthesis not supported');
+    }
+}
+
 // PetHealth Pro - Shared JavaScript Functions
 
 // Global variables
