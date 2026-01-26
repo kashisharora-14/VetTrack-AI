@@ -574,7 +574,8 @@ def consultation(pet_id):
         'consultation.html',
         pet=pet,
         consultation=consultation,
-        room_id=room_id
+        room_id=room_id,
+        geoapify_key=os.environ.get("GEOAPIFY_API_KEY", "")
     )
 
 
