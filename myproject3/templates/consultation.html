@@ -229,7 +229,9 @@
             const radius = 10000; // 10km radius
             const categories = "healthcare.veterinary";
             const geoapifyUrl = `https://api.geoapify.com/v2/places?categories=${categories}&filter=circle:${lng},${lat},${radius}&bias=proximity:${lng},${lat}&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
-            const overpassQuery = `[out:json][timeout:25];(node["amenity"~"veterinary|animal_hospital|clinic"](around:${radius},${lat},${lng});way["amenity"~"veterinary|animal_hospital|clinic"](around:${radius},${lat},${lng}););out center;`;
+            
+            // Overpass fallback - refined to target actual veterinary clinics
+            const overpassQuery = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng}););out center;`;
             const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
 
             try {
@@ -266,7 +268,15 @@
                     }
                 }
 
-                updateVetUI(vets.length > 0 ? vets : mockVets);
+                // Filter out non-vet results if they snuck in (e.g. general clinics)
+                const filteredVets = vets.filter(v => {
+                    const lowerName = v.name.toLowerCase();
+                    const isMedical = lowerName.includes("dental") || lowerName.includes("nursing") || lowerName.includes("physio") || lowerName.includes("homoeopathic");
+                    const isVet = lowerName.includes("vet") || lowerName.includes("pet") || lowerName.includes("animal");
+                    return isVet || !isMedical;
+                });
+
+                updateVetUI(filteredVets.length > 0 ? filteredVets : mockVets);
             } catch (error) {
                 console.error("Places API error:", error);
                 updateVetUI(mockVets);
