@@ -321,6 +321,39 @@
             }, 1000);
         }
 
+        function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                showNotification("Geolocation is not supported by your browser", "error");
+                return;
+            }
+
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.textContent = 'Locating...';
+                statusEl.className = 'badge bg-info text-white';
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    initMap(lat, lng);
+                    fetchNearbyVets(lat, lng);
+                    
+                    if (statusEl) {
+                        statusEl.textContent = 'Location Found';
+                        statusEl.className = 'badge bg-success text-white';
+                    }
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    showNotification("Unable to retrieve your location. Showing mock data.", "warning");
+                    initMap(40.7128, -74.0060); // Fallback to NYC
+                    updateVetUI(mockVets);
+                }
+            );
+        }
+
         function endConsultation() {
             if (confirm("End consultation?")) window.location.href = "/";
         }
