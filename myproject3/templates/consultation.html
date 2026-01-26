@@ -310,7 +310,7 @@
 
         async function fetchNearbyVets(lat, lng) {
             const radius = 50000; // 50km radius
-            const query = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng});node["amenity"="animal_hospital"](around:${radius},${lat},${lng});way["amenity"="animal_hospital"](around:${radius},${lat},${lng});node["healthcare"="hospital"]["healthcare:speciality"~"veterinary"](around:${radius},${lat},${lng});node["office"="veterinary"](around:${radius},${lat},${lng}););out center;`;
+            const query = `[out:json][timeout:25];(node["amenity"~"veterinary|animal_hospital|clinic"](around:${radius},${lat},${lng});way["amenity"~"veterinary|animal_hospital|clinic"](around:${radius},${lat},${lng});node["healthcare"~"veterinary|animal_hospital|hospital"](around:${radius},${lat},${lng});node["healthcare:speciality"~"veterinary"](around:${radius},${lat},${lng});node["office"="veterinary"](around:${radius},${lat},${lng});node["shop"~"pet|veterinary"](around:${radius},${lat},${lng});node["name"~"Vet|Animal|Pet",i](around:${radius},${lat},${lng}););out center;`;
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
             console.log("Fetching vets for:", lat, lng);
@@ -354,7 +354,6 @@
                     updateVetUI(realVets);
                 } else {
                     vetsList.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-search-minus display-4 mb-3 text-muted"></i><h4>No real veterinarians found in this area</h4><p class="text-muted">Try searching a different city or using a broader location.</p></div>';
-                    // Show markers for generic locations if no vets are found
                     if (map) {
                         map.setView([lat, lng], 12);
                     }
