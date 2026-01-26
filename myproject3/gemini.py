@@ -2,17 +2,14 @@ import os
 from google import genai
 from google.genai import types
 
-# Use Replit's AI Integrations to avoid leaked key issues
-AI_INTEGRATIONS_GEMINI_API_KEY = os.environ.get("AI_INTEGRATIONS_GEMINI_API_KEY")
-AI_INTEGRATIONS_GEMINI_BASE_URL = os.environ.get("AI_INTEGRATIONS_GEMINI_BASE_URL")
-
-client = genai.Client(
-    api_key=AI_INTEGRATIONS_GEMINI_API_KEY,
-    http_options={
-        'api_version': '',
-        'base_url': AI_INTEGRATIONS_GEMINI_BASE_URL   
-    }
+response = client.models.generate_content(
+    model="gemini-1.5-flash",
+    contents=prompt,
+    config=types.GenerateContentConfig(
+        response_mime_type="application/json"
+    )
 )
+
 
 def analyze_pet_symptoms(pet, symptoms):
     """Analyze pet symptoms using Replit AI Integrations."""
