@@ -244,6 +244,11 @@
                 if (GEOAPIFY_API_KEY) {
                     try {
                         const response = await fetch(geoapifyUrl);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        const contentType = response.headers.get("content-type");
+                        if (!contentType || !contentType.includes("application/json")) {
+                            throw new TypeError("Oops, we haven't got JSON!");
+                        }
                         const data = await response.json();
                         if (data.features && data.features.length > 0) {
                             vets = data.features.map(f => ({
@@ -257,23 +262,28 @@
                             }));
                         }
                     } catch (e) {
-                        console.warn("Geoapify Places API failed, trying Overpass");
+                        console.warn("Geoapify Places API failed, trying Overpass", e);
                     }
                 }
                 
                 if (vets.length === 0) {
-                    const response = await fetch(overpassUrl);
-                    const data = await response.json();
-                    if (data.elements && data.elements.length > 0) {
-                        vets = data.elements.map(el => ({
-                            id: el.id,
-                            name: el.tags?.name || "Veterinary Clinic",
-                            specialty: "Veterinary Care",
-                            avatar: (el.tags?.name || "V").substring(0, 2).toUpperCase(),
-                            lat: el.lat || el.center?.lat,
-                            lng: el.lon || el.center?.lon,
-                            address: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}` : "Nearby location"
-                        }));
+                    try {
+                        const response = await fetch(overpassUrl);
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        const data = await response.json();
+                        if (data.elements && data.elements.length > 0) {
+                            vets = data.elements.map(el => ({
+                                id: el.id,
+                                name: el.tags?.name || "Veterinary Clinic",
+                                specialty: "Veterinary Care",
+                                avatar: (el.tags?.name || "V").substring(0, 2).toUpperCase(),
+                                lat: el.lat || el.center?.lat,
+                                lng: el.lon || el.center?.lon,
+                                address: el.tags?.["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}` : "Nearby location"
+                            }));
+                        }
+                    } catch (e) {
+                        console.error("Overpass API failed:", e);
                     }
                 }
 

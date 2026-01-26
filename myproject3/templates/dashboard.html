@@ -500,17 +500,25 @@
                 
                 // Start TTS immediately
                 if (typeof speakText === 'function') {
-                    speakText(welcomeMessage).then(() => {
-                        // Remove loading indicator after TTS completes
+                    const speechPromise = speakText(welcomeMessage);
+                    if (speechPromise && typeof speechPromise.then === 'function') {
+                        speechPromise.then(() => {
+                            // Remove loading indicator after TTS completes
+                            setTimeout(() => {
+                                if (loadingToast.parentNode) {
+                                    loadingToast.remove();
+                                }
+                            }, 2000);
+                        }).catch(e => {
+                            console.error('TTS error:', e);
+                            if (loadingToast.parentNode) loadingToast.remove();
+                        });
+                    } else {
+                        // If not a promise, just remove after a delay
                         setTimeout(() => {
-                            if (loadingToast.parentNode) {
-                                loadingToast.remove();
-                            }
-                        }, 2000);
-                    }).catch(e => {
-                        console.error('TTS error:', e);
-                        if (loadingToast.parentNode) loadingToast.remove();
-                    });
+                            if (loadingToast.parentNode) loadingToast.remove();
+                        }, 5000);
+                    }
                 } else {
                     if (loadingToast.parentNode) loadingToast.remove();
                 }
@@ -581,22 +589,24 @@
                         
                         // Show/hide announce button based on pending reminders
                         const announceBtn = document.getElementById('announceBtn');
-                        if (pending > 0) {
-                            announceBtn.style.display = 'inline-block';
-                            // Announce pending reminders only once per session
-                            if (!hasAnnouncedReminders) {
-                                setTimeout(() => {
-                                    // Check if no audio is currently playing before announcing
-                                    const audioElement = document.querySelector('audio');
-                                    if (!audioElement || audioElement.paused) {
-                                        announcePendingReminders(data.reminders.filter(r => !r.completed));
-                                        hasAnnouncedReminders = true;
-                                        sessionStorage.setItem('hasAnnouncedReminders', 'true');
-                                    }
-                                }, 3000); // 3 second delay
+                        if (announceBtn) {
+                            if (pending > 0) {
+                                announceBtn.style.display = 'inline-block';
+                                // Announce pending reminders only once per session
+                                if (!hasAnnouncedReminders) {
+                                    setTimeout(() => {
+                                        // Check if no audio is currently playing before announcing
+                                        const audioElement = document.querySelector('audio');
+                                        if (!audioElement || audioElement.paused) {
+                                            announcePendingReminders(data.reminders.filter(r => !r.completed));
+                                            hasAnnouncedReminders = true;
+                                            sessionStorage.setItem('hasAnnouncedReminders', 'true');
+                                        }
+                                    }, 3000); // 3 second delay
+                                }
+                            } else {
+                                announceBtn.style.display = 'none';
                             }
-                        } else {
-                            announceBtn.style.display = 'none';
                         }
                     }
                 });
