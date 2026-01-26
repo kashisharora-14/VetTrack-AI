@@ -85,3 +85,14 @@ python-dotenv
 reportlab
 requests
 werkzeug
+flask
+flask-login
+flask-sqlalchemy
+google-genai
+gunicorn
+pillow
+psycopg2-binary
+python-dotenv
+reportlab
+requests
+werkzeug
