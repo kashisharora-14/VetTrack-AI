@@ -310,11 +310,12 @@
 
         async function fetchNearbyVets(lat, lng) {
             const radius = 15000; // 15km radius
-            const query = `[out:json];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng}););out center;`;
+            const query = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng}););out center;`;
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
             try {
                 const response = await fetch(url);
+                if (!response.ok) throw new Error('Overpass API error');
                 const data = await response.json();
                 
                 if (data.elements && data.elements.length > 0) {
@@ -332,7 +333,7 @@
                             id: el.id,
                             name: name,
                             specialty: tags.speciality || tags.description || "Veterinary Care",
-                            rating: null, // Remove fake ratings
+                            rating: null,
                             distance: "Nearby",
                             availability: tags.opening_hours || "Contact for hours",
                             avatar: name.substring(0, 2).toUpperCase(),
@@ -345,11 +346,12 @@
                     });
                     updateVetUI(realVets);
                 } else {
+                    const vetsList = document.getElementById('vetsList');
                     vetsList.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-search-minus display-4 mb-3 text-muted"></i><h4>No veterinarians found in this area</h4><p class="text-muted">Try searching a different location or increasing your search area.</p></div>';
                 }
             } catch (error) {
                 console.error("Error fetching real vets:", error);
-                showNotification("Failed to fetch real-time data. Please try again later.", "error");
+                showNotification("Failed to fetch real-time data. The map service might be busy. Please try again.", "error");
             }
         }
 
