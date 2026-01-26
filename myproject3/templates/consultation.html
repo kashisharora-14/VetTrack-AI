@@ -267,6 +267,44 @@
             vetsList.scrollIntoView({ behavior: 'smooth' });
         }
 
+        async function useCurrentLocation() {
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.textContent = 'Locating...';
+                statusEl.className = 'badge bg-info text-white';
+            }
+
+            if (!navigator.geolocation) {
+                showNotification("Geolocation is not supported by your browser", "error");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                console.log("Current location:", lat, lng);
+                initMap(lat, lng);
+                await fetchNearbyVets(lat, lng);
+                if (statusEl) {
+                    statusEl.textContent = 'Location Found';
+                    statusEl.className = 'badge bg-success text-white';
+                }
+            }, (error) => {
+                console.error("Geolocation error:", error);
+                let msg = "Could not get your location";
+                if (error.code === 1) msg = "Location access denied. Please allow location access or search manually.";
+                showNotification(msg, "warning");
+                if (statusEl) {
+                    statusEl.textContent = 'Location Denied';
+                    statusEl.className = 'badge bg-danger text-white';
+                }
+            }, {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
+        }
+
         async function searchVets() {
             const location = document.getElementById('locationInput').value;
             if (!location) {
