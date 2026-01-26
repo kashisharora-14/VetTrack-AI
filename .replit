@@ -1,4 +1,4 @@
-modules = ["web", "python-3.12", "nodejs-20"]
+modules = ["web", "nodejs-20", "python-3.11"]
 run = "python3 MyProject-3/app.py"
 
 [nix]
@@ -38,6 +38,7 @@ outputType = "webview"
 
 [agent]
 expertMode = true
+integrations = ["python_gemini_ai_integrations:1.0.0"]
 
 [userenv]
 

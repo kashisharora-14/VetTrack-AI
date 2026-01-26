@@ -77,3 +77,4 @@ flask-sqlalchemy
 python-dotenv
 reportlab
 requests
+google-genai
