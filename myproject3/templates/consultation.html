@@ -309,8 +309,8 @@
         }
 
         async function fetchNearbyVets(lat, lng) {
-            const radius = 10000; // 10km radius for better results
-            const query = `[out:json];node["amenity"="veterinary"](around:${radius},${lat},${lng});out;`;
+            const radius = 15000; // 15km radius
+            const query = `[out:json];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng}););out center;`;
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
             try {
@@ -319,65 +319,70 @@
                 
                 if (data.elements && data.elements.length > 0) {
                     const realVets = data.elements.map(el => {
-                        const name = el.tags.name || "Veterinary Clinic";
+                        const tags = el.tags || {};
+                        const name = tags.name || tags["name:en"] || "Veterinary Clinic";
+                        
+                        // Extract address parts
+                        const street = tags["addr:street"] || "";
+                        const houseNumber = tags["addr:housenumber"] || "";
+                        const city = tags["addr:city"] || "";
+                        const fullAddress = [street, houseNumber, city].filter(Boolean).join(", ") || "Address available on map";
+
                         return {
                             id: el.id,
                             name: name,
-                            specialty: el.tags.speciality || "General Practice",
-                            rating: (4 + Math.random()).toFixed(1),
+                            specialty: tags.speciality || tags.description || "Veterinary Care",
+                            rating: null, // Remove fake ratings
                             distance: "Nearby",
-                            availability: "Available Now",
+                            availability: tags.opening_hours || "Contact for hours",
                             avatar: name.substring(0, 2).toUpperCase(),
-                            lat: el.lat,
-                            lng: el.lon,
-                            address: el.tags["addr:street"] ? `${el.tags["addr:street"]} ${el.tags["addr:housenumber"] || ""}` : "Address available on map",
-                            phone: el.tags.phone || "Contact via map"
+                            lat: el.lat || (el.center && el.center.lat),
+                            lng: el.lon || (el.center && el.center.lon),
+                            address: fullAddress,
+                            phone: tags.phone || tags["contact:phone"] || null,
+                            website: tags.website || tags["contact:website"] || null
                         };
                     });
                     updateVetUI(realVets);
                 } else {
-                    console.log("No real vets found in area, using mock data");
-                    updateVetUI(mockVets);
+                    vetsList.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-search-minus display-4 mb-3 text-muted"></i><h4>No veterinarians found in this area</h4><p class="text-muted">Try searching a different location or increasing your search area.</p></div>';
                 }
             } catch (error) {
                 console.error("Error fetching real vets:", error);
-                updateVetUI(mockVets);
+                showNotification("Failed to fetch real-time data. Please try again later.", "error");
             }
         }
 
         function updateVetUI(vets) {
             const vetsList = document.getElementById('vetsList');
             vetsList.style.display = 'flex';
-            vetsList.innerHTML = vets.slice(0, 6).map(vet => `
+            vetsList.innerHTML = vets.slice(0, 9).map(vet => `
                 <div class="col-md-4">
                     <div class="card h-100 shadow-sm border-0 hover-lift vet-card">
-                        <div class="card-body p-4">
+                        <div class="card-body p-4 d-flex flex-column">
                             <div class="d-flex align-items-center mb-3">
-                                <div class="avatar-circle bg-primary text-white me-3" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold;">
+                                <div class="avatar-circle bg-primary text-white me-3" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; flex-shrink: 0;">
                                     ${vet.avatar}
                                 </div>
-                                <div class="text-start">
-                                    <h5 class="fw-bold mb-0 text-truncate" style="max-width: 150px;" title="${vet.name}">${vet.name}</h5>
-                                    <div class="text-warning small">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star-half-alt"></i>
-                                        <span class="ms-1 text-muted">${vet.rating} (60+)</span>
-                                    </div>
+                                <div class="text-start overflow-hidden">
+                                    <h5 class="fw-bold mb-0 text-truncate" title="${vet.name}">${vet.name}</h5>
+                                    <div class="small text-primary">${vet.specialty}</div>
                                 </div>
                             </div>
                             
-                            <div class="text-start mb-3 small text-muted">
-                                <div class="mb-1"><i class="fas fa-stethoscope me-2"></i>${vet.specialty}</div>
-                                <div class="mb-1 text-truncate"><i class="fas fa-map-marker-alt me-2"></i>${vet.address || "Nearby"}</div>
-                                <div class="text-success"><i class="fas fa-clock me-2"></i>Open • Closes soon</div>
+                            <div class="text-start mb-3 small text-muted flex-grow-1">
+                                <div class="mb-2 d-flex align-items-start">
+                                    <i class="fas fa-map-marker-alt me-2 mt-1"></i>
+                                    <span>${vet.address}</span>
+                                </div>
+                                ${vet.phone ? `<div class="mb-2"><i class="fas fa-phone me-2"></i>${vet.phone}</div>` : ''}
+                                ${vet.website ? `<div class="mb-2 text-truncate"><i class="fas fa-globe me-2"></i><a href="${vet.website}" target="_blank" class="text-decoration-none">${vet.website.replace(/^https?:\/\//, '')}</a></div>` : ''}
+                                <div class="text-success"><i class="fas fa-clock me-2"></i>${vet.availability}</div>
                             </div>
 
-                            <div class="d-flex gap-2 mt-auto">
+                            <div class="d-flex gap-2 mt-3">
                                 <button class="btn btn-outline-primary flex-fill rounded-pill btn-sm" onclick="showOnMap(${vet.lat}, ${vet.lng}, '${vet.name.replace(/'/g, "\\'")}')">
-                                    <i class="fas fa-directions me-1"></i>Directions
+                                    <i class="fas fa-map-marked-alt me-1"></i>Map
                                 </button>
                                 <button class="btn btn-primary flex-fill rounded-pill btn-sm" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">
                                     <i class="fas fa-video me-1"></i>Consult
@@ -392,7 +397,7 @@
                 markers.forEach(m => map.removeLayer(m));
                 
                 const vetIcon = L.divIcon({
-                    html: '<div style="background: #dc3545; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"><i class="fas fa-map-marker-alt text-white" style="font-size: 16px;"></i></div>',
+                    html: '<div style="background: #dc3545; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fas fa-paw text-white" style="font-size: 16px;"></i></div>',
                     className: 'custom-vet-icon',
                     iconSize: [34, 34],
                     iconAnchor: [17, 17]
@@ -400,10 +405,11 @@
 
                 markers = vets.map(vet => {
                     return L.marker([vet.lat, vet.lng], { icon: vetIcon }).addTo(map).bindPopup(`
-                        <div class="p-2">
+                        <div class="p-2" style="min-width: 200px;">
                             <h6 class="fw-bold mb-1">${vet.name}</h6>
-                            <p class="small text-muted mb-2">${vet.specialty}</p>
-                            <button class="btn btn-primary btn-sm w-100" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">Consult Now</button>
+                            <div class="small text-muted mb-2">${vet.address}</div>
+                            ${vet.phone ? `<div class="small mb-2"><i class="fas fa-phone me-1"></i> ${vet.phone}</div>` : ''}
+                            <button class="btn btn-primary btn-sm w-100 mt-1" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">Start Consultation</button>
                         </div>
                     `);
                 });
