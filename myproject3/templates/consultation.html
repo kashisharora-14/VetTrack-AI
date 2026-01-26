@@ -8,8 +8,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <!-- Jitsi Meet API -->
     <script src="https://meet.jit.si/external_api.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <body class="bg-light">
@@ -51,6 +53,7 @@
                                             <i class="fas fa-crosshairs me-1"></i>Use my current location
                                         </button>
                                     </div>
+                                    <div id="map" class="mt-4 rounded shadow-sm" style="height: 300px; display: none;"></div>
                                 </div>
                             </div>
                         </div>
@@ -143,33 +146,6 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Consultation End Confirmation Modal -->
-    <div class="modal fade" id="endConsultationModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">End Consultation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to end this consultation?</p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Make sure to save any important notes before ending the session.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue
-                        Consultation</button>
-                    <button type="button" class="btn btn-danger" onclick="confirmEndConsultation()">
-                        <i class="fas fa-phone-slash me-1"></i>End Consultation
-                    </button>
                 </div>
             </div>
         </div>
@@ -183,20 +159,43 @@
         let timerInterval = null;
         let petId = "{{ pet.id }}";
         let roomId = "{{ room_id }}";
+        let map = null;
+        let markers = [];
 
         const mockVets = [
-            { id: 1, name: "Dr. Sarah Johnson", specialty: "General Practice", rating: 4.9, distance: "1.2 miles", availability: "Available Now", avatar: "SJ" },
-            { id: 2, name: "Dr. Michael Chen", specialty: "Emergency Care", rating: 4.8, distance: "2.5 miles", availability: "Available Now", avatar: "MC" },
-            { id: 3, name: "Dr. Emily Wilson", specialty: "Feline Specialist", rating: 5.0, distance: "3.1 miles", availability: "Available Now", avatar: "EW" }
+            { id: 1, name: "Dr. Sarah Johnson", specialty: "General Practice", rating: 4.9, distance: "1.2 miles", availability: "Available Now", avatar: "SJ", lat: 40.7128, lng: -74.0060 },
+            { id: 2, name: "Dr. Michael Chen", specialty: "Emergency Care", rating: 4.8, distance: "2.5 miles", availability: "Available Now", avatar: "MC", lat: 40.7200, lng: -74.0100 },
+            { id: 3, name: "Dr. Emily Wilson", specialty: "Feline Specialist", rating: 5.0, distance: "3.1 miles", availability: "Available Now", avatar: "EW", lat: 40.7050, lng: -73.9950 }
         ];
 
-        document.addEventListener('DOMContentLoaded', function () {
-            // Wait for user to search and select a vet
-        });
+        function initMap(lat, lng) {
+            const mapEl = document.getElementById('map');
+            mapEl.style.display = 'block';
+            if (map) {
+                map.setView([lat, lng], 13);
+                return;
+            }
+            map = L.map('map').setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
+        }
 
         function useCurrentLocation() {
-            document.getElementById('locationInput').value = "Downtown, New York";
-            searchVets();
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    initMap(lat, lng);
+                    document.getElementById('locationInput').value = `My Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                    searchVets();
+                }, () => {
+                    alert("Unable to access location. Please check your browser settings.");
+                });
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
         }
 
         function searchVets() {
@@ -233,6 +232,13 @@
                     </div>
                 </div>
             `).join('');
+
+            if (map) {
+                markers.forEach(m => map.removeLayer(m));
+                markers = mockVets.map(vet => {
+                    return L.marker([vet.lat, vet.lng]).addTo(map).bindPopup(`<b>${vet.name}</b><br>${vet.specialty}`);
+                });
+            }
             
             vetsList.scrollIntoView({ behavior: 'smooth' });
         }
@@ -241,7 +247,6 @@
             document.getElementById('vet-search-container').style.display = 'none';
             document.getElementById('consultation-area').style.display = 'block';
             document.getElementById('activeVetName').textContent = vetName;
-            
             initializeJitsiMeet();
             startConsultationTimer();
         }
@@ -253,7 +258,7 @@
                 width: '100%',
                 height: '600px',
                 parentNode: document.querySelector('#jitsi-container'),
-                userInfo: { displayName: `Pet Owner - {{ pet.name }}` },
+                userInfo: { displayName: "Pet Owner" },
                 configOverwrite: {
                     startWithAudioMuted: false,
                     startWithVideoMuted: false,
@@ -261,18 +266,14 @@
                     prejoinPageEnabled: false
                 }
             };
-
             api = new JitsiMeetExternalAPI(domain, options);
-            api.addEventListener('ready', () => updateConnectionStatus('Connected', 'success'));
-            api.addEventListener('videoConferenceLeft', () => window.location.href = "/");
-        }
-
-        function updateConnectionStatus(status, type) {
-            const el = document.getElementById('connectionStatus');
-            if (el) {
-                el.textContent = status;
-                el.className = `badge bg-${type === 'success' ? 'success' : 'warning'} text-white`;
-            }
+            api.addEventListener('ready', () => {
+                const statusEl = document.getElementById('connectionStatus');
+                if (statusEl) {
+                    statusEl.textContent = 'Connected';
+                    statusEl.className = 'badge bg-success text-white';
+                }
+            });
         }
 
         function startConsultationTimer() {
@@ -281,37 +282,19 @@
                 const elapsed = Math.floor((new Date() - startTime) / 1000);
                 const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
                 const secs = (elapsed % 60).toString().padStart(2, '0');
-                document.getElementById('consultationTimer').textContent = `${mins}:${secs}`;
+                const timerEl = document.getElementById('consultationTimer');
+                if (timerEl) timerEl.textContent = `${mins}:${secs}`;
             }, 1000);
         }
 
         function endConsultation() {
             if (confirm("End consultation?")) window.location.href = "/";
         }
-    </script>
-            <h6 class="text-primary">Analysis</h6>
-            <p class="bg-light p-2 rounded">${record.diagnosis}</p>
-            <h6 class="text-primary">Recommendations</h6>
-            <p class="bg-light p-2 rounded">${record.recommendation}</p>
-        </div>
-    </div>
-    `;
-            }).join('');
-        }
 
-        // ------------------ Helpers ------------------
-        function truncateText(text, maxLength) {
-            return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
-        }
         window.addEventListener('beforeunload', () => {
             if (timerInterval) clearInterval(timerInterval);
             if (api) api.dispose();
         });
-
     </script>
-
-
-
 </body>
-
 </html>
