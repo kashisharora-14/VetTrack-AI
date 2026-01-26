@@ -179,7 +179,15 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
-            L.marker([lat, lng]).addTo(map).bindPopup('You are here').openPopup();
+
+            const dogIcon = L.divIcon({
+                html: '<i class="fas fa-paw text-primary shadow-sm" style="font-size: 24px; background: white; padding: 5px; border-radius: 50%; border: 2px solid var(--bs-primary);"></i>',
+                className: 'custom-div-icon',
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
+
+            L.marker([lat, lng], { icon: dogIcon }).addTo(map).bindPopup('You and Your Pet').openPopup();
         }
 
         function useCurrentLocation() {
@@ -189,13 +197,19 @@
                     const lng = position.coords.longitude;
                     initMap(lat, lng);
                     document.getElementById('locationInput').value = `My Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-                    searchVets();
+                    fetchNearbyVets(lat, lng);
                 }, () => {
                     alert("Unable to access location. Please check your browser settings.");
                 });
             } else {
                 alert("Geolocation is not supported by your browser.");
             }
+        }
+
+        function fetchNearbyVets(lat, lng) {
+            // In a real app, this would be an API call
+            // For now, we'll use the mock data
+            searchVets();
         }
 
         function searchVets() {
@@ -235,8 +249,16 @@
 
             if (map) {
                 markers.forEach(m => map.removeLayer(m));
+                
+                const vetIcon = L.divIcon({
+                    html: '<i class="fas fa-user-md text-success shadow-sm" style="font-size: 20px; background: white; padding: 4px; border-radius: 50%; border: 2px solid var(--bs-success);"></i>',
+                    className: 'custom-div-icon',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
                 markers = mockVets.map(vet => {
-                    return L.marker([vet.lat, vet.lng]).addTo(map).bindPopup(`<b>${vet.name}</b><br>${vet.specialty}`);
+                    return L.marker([vet.lat, vet.lng], { icon: vetIcon }).addTo(map).bindPopup(`<b>${vet.name}</b><br>${vet.specialty}`);
                 });
             }
             
