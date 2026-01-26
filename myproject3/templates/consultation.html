@@ -9,9 +9,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/geoapify/leaflet-address-search-plugin@main/dist/L.Control.GeoapifyAddressSearch.min.css" />
     <!-- Jitsi Meet API -->
     <script src="https://meet.jit.si/external_api.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/geoapify/leaflet-address-search-plugin@main/dist/L.Control.GeoapifyAddressSearch.min.js"></script>
 </head>
 
 <body class="bg-light">
@@ -48,12 +50,12 @@
                                         <input type="text" id="locationInput" class="form-control border-start-0" placeholder="Enter city, state or zip code...">
                                         <button class="btn btn-primary px-4" onclick="searchVets()">Search Vets</button>
                                     </div>
-                                    <div class="mt-2 text-start">
+                                    <div class="mt-2 text-start d-flex gap-3">
                                         <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="useCurrentLocation()">
                                             <i class="fas fa-crosshairs me-1"></i>Use my current location
                                         </button>
                                     </div>
-                                    <div id="map" class="mt-4 rounded shadow-sm" style="height: 300px; display: none;"></div>
+                                    <div id="map" class="mt-4 rounded shadow-sm" style="height: 400px; display: none;"></div>
                                 </div>
                             </div>
                         </div>
@@ -161,25 +163,37 @@
         let roomId = "{{ room_id }}";
         let map = null;
         let markers = [];
+        const GEOAPIFY_API_KEY = "YOUR_GEOAPIFY_API_KEY"; // User will replace this
 
         const mockVets = [
-            { id: 1, name: "Dr. Sarah Johnson", specialty: "General Practice", rating: 4.9, distance: "1.2 miles", availability: "Available Now", avatar: "SJ", lat: 40.7128, lng: -74.0060 },
-            { id: 2, name: "Dr. Michael Chen", specialty: "Emergency Care", rating: 4.8, distance: "2.5 miles", availability: "Available Now", avatar: "MC", lat: 40.7200, lng: -74.0100 },
-            { id: 3, name: "Dr. Emily Wilson", specialty: "Feline Specialist", rating: 5.0, distance: "3.1 miles", availability: "Available Now", avatar: "EW", lat: 40.7050, lng: -73.9950 }
+            { id: 1, name: "Dr. Sarah Johnson", specialty: "General Practice", rating: 4.9, avatar: "SJ", lat: 40.7128, lng: -74.0060, address: "New York, NY" },
+            { id: 2, name: "Dr. Michael Chen", specialty: "Emergency Care", rating: 4.8, avatar: "MC", lat: 40.7200, lng: -74.0100, address: "New York, NY" },
+            { id: 3, name: "Dr. Emily Wilson", specialty: "Feline Specialist", rating: 5.0, avatar: "EW", lat: 40.7050, lng: -73.9950, address: "Brooklyn, NY" }
         ];
 
         function initMap(lat, lng) {
             const mapEl = document.getElementById('map');
             mapEl.style.display = 'block';
+            
             if (map) {
-                map.setView([lat, lng], 13);
+                map.setView([lat, lng], 14);
                 return;
             }
-            map = L.map('map').setView([lat, lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+
+            // Initialize Leaflet map with Geoapify tiles
+            map = L.map('map').setView([lat, lng], 14);
+            
+            const isRetina = L.Browser.retina;
+            const baseUrl = `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_API_KEY}`;
+            const retinaUrl = `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}@2x.png?apiKey=${GEOAPIFY_API_KEY}`;
+
+            L.tileLayer(isRetina ? retinaUrl : baseUrl, {
+                attribution: 'Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | <a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> contributors',
+                maxZoom: 20,
+                id: 'osm-bright'
             }).addTo(map);
 
+            // Add user location marker
             const dogIcon = L.divIcon({
                 html: '<div style="background: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><i class="fas fa-paw text-primary" style="font-size: 20px;"></i></div>',
                 className: 'custom-dog-icon',
@@ -187,34 +201,89 @@
                 iconAnchor: [20, 20]
             });
 
-            L.marker([lat, lng], { icon: dogIcon }).addTo(map).bindPopup('<b>You and Your Pet</b><br>Currently looking for vets...').openPopup();
+            L.marker([lat, lng], { icon: dogIcon }).addTo(map).bindPopup('<b>You and Your Pet</b>').openPopup();
+        }
+
+        async function useCurrentLocation() {
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                statusEl.textContent = 'Locating...';
+                statusEl.className = 'badge bg-info text-white';
+            }
+
+            if (!navigator.geolocation) {
+                showNotification("Geolocation is not supported by your browser", "error");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                initMap(lat, lng);
+                await fetchNearbyVets(lat, lng);
+                if (statusEl) {
+                    statusEl.textContent = 'Location Found';
+                    statusEl.className = 'badge bg-success text-white';
+                }
+            }, (error) => {
+                console.error("Geolocation error:", error);
+                showNotification("Could not get your location. Please search manually.", "warning");
+            });
+        }
+
+        async function searchVets() {
+            const location = document.getElementById('locationInput').value;
+            if (!location) {
+                showNotification("Please enter a location", "warning");
+                return;
+            }
+
+            try {
+                // Geoapify Geocoding API
+                const response = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(location)}&apiKey=${GEOAPIFY_API_KEY}`);
+                const data = await response.json();
+
+                if (data.features && data.features.length > 0) {
+                    const [lng, lat] = data.features[0].geometry.coordinates;
+                    initMap(lat, lng);
+                    await fetchNearbyVets(lat, lng);
+                } else {
+                    showNotification("Location not found", "warning");
+                }
+            } catch (error) {
+                console.error("Geocoding error:", error);
+                showNotification("Search service unavailable", "error");
+            }
         }
 
         async function fetchNearbyVets(lat, lng) {
-            const radius = 5000; // 5km
-            const query = `[out:json];node["amenity"="veterinary"](around:${radius},${lat},${lng});out;`;
-            const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+            const radius = 5000; // 5km radius
+            const categories = "healthcare.veterinary";
+            const url = `https://api.geoapify.com/v2/places?categories=${categories}&filter=circle:${lng},${lat},${radius}&bias=proximity:${lng},${lat}&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                const realVets = data.elements.map(el => ({
-                    id: el.id,
-                    name: el.tags.name || "Unnamed Vet Clinic",
-                    specialty: "General Practice",
-                    rating: (4 + Math.random()).toFixed(1),
-                    distance: "Nearby",
-                    availability: "Available Now",
-                    avatar: (el.tags.name || "V").substring(0, 2).toUpperCase(),
-                    lat: el.lat,
-                    lng: el.lon
-                }));
-
-                // If no real vets found, fallback to mock data or just show message
-                updateVetUI(realVets.length > 0 ? realVets : mockVets);
+                if (data.features && data.features.length > 0) {
+                    const realVets = data.features.map(f => ({
+                        id: f.properties.place_id,
+                        name: f.properties.name || "Veterinary Clinic",
+                        specialty: "Veterinary Care",
+                        rating: (4.5 + Math.random() * 0.5).toFixed(1),
+                        avatar: (f.properties.name || "V").substring(0, 2).toUpperCase(),
+                        lat: f.properties.lat,
+                        lng: f.properties.lon,
+                        address: f.properties.formatted || f.properties.address_line2
+                    }));
+                    updateVetUI(realVets);
+                } else {
+                    showNotification("No vets found within 5km of this location.", "info");
+                    updateVetUI([]);
+                }
             } catch (error) {
-                console.error("Error fetching real vets:", error);
+                console.error("Places API error:", error);
+                showNotification("Error fetching nearby places", "error");
                 updateVetUI(mockVets);
             }
         }
@@ -222,22 +291,29 @@
         function updateVetUI(vets) {
             const vetsList = document.getElementById('vetsList');
             vetsList.style.display = 'flex';
-            vetsList.innerHTML = vets.slice(0, 6).map(vet => `
+            
+            if (vets.length === 0) {
+                vetsList.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-search-minus display-4 mb-3 text-muted"></i><h4>No veterinarians found</h4></div>';
+                return;
+            }
+
+            vetsList.innerHTML = vets.slice(0, 9).map(vet => `
                 <div class="col-md-4">
-                    <div class="card h-100 shadow-sm border-0 hover-lift">
-                        <div class="card-body text-center p-4">
-                            <div class="avatar-circle bg-primary text-white mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
-                                ${vet.avatar}
+                    <div class="card h-100 shadow-sm border-0 hover-lift vet-card">
+                        <div class="card-body p-4 d-flex flex-column text-start">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar-circle bg-primary text-white me-3" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold;">
+                                    ${vet.avatar}
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0">${vet.name}</h5>
+                                    <div class="small text-primary">${vet.specialty}</div>
+                                </div>
                             </div>
-                            <h5 class="fw-bold mb-1">${vet.name}</h5>
-                            <p class="text-primary small mb-2">${vet.specialty}</p>
-                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                <span class="badge bg-success-subtle text-success me-2">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> ${vet.availability}
-                                </span>
-                                <span class="text-warning small"><i class="fas fa-star me-1"></i>${vet.rating}</span>
+                            <div class="small text-muted mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>${vet.address}
                             </div>
-                            <button class="btn btn-primary w-100 rounded-pill" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">
+                            <button class="btn btn-primary mt-auto rounded-pill btn-sm" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">
                                 <i class="fas fa-video me-1"></i>Connect Now
                             </button>
                         </div>
@@ -249,7 +325,7 @@
                 markers.forEach(m => map.removeLayer(m));
                 
                 const vetIcon = L.divIcon({
-                    html: '<div style="background: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 2px solid #198754; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><i class="fas fa-user-md text-success" style="font-size: 16px;"></i></div>',
+                    html: '<div style="background: #dc3545; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><i class="fas fa-paw text-white" style="font-size: 16px;"></i></div>',
                     className: 'custom-vet-icon',
                     iconSize: [34, 34],
                     iconAnchor: [17, 17]
@@ -258,9 +334,8 @@
                 markers = vets.map(vet => {
                     return L.marker([vet.lat, vet.lng], { icon: vetIcon }).addTo(map).bindPopup(`
                         <b>${vet.name}</b><br>
-                        <span class="text-muted">${vet.specialty}</span><br>
-                        <span class="text-warning"><i class="fas fa-star"></i> ${vet.rating}</span><br>
-                        <button class="btn btn-primary btn-xs mt-2" style="font-size: 10px; padding: 2px 8px;" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">Connect</button>
+                        <small>${vet.address}</small><br>
+                        <button class="btn btn-primary btn-sm mt-2 w-100" onclick="startVetConsultation('${vet.name.replace(/'/g, "\\'")}')">Connect</button>
                     `);
                 });
             }
