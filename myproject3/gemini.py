@@ -28,7 +28,7 @@ def analyze_pet_symptoms(pet, symptoms):
     """
     try:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="models/gemini-1.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json"
@@ -62,7 +62,7 @@ def analyze_pet_image(pet, image_path, description=""):
         """
         
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="models/gemini-1.5-flash",
             contents=[
                 prompt,
                 types.Part.from_bytes(data=image_data, mime_type="image/jpeg")
@@ -83,7 +83,7 @@ def get_diagnosis_explanation_from_gemini(diagnosis_name):
     prompt = f"Provide a detailed educational explanation for the pet health diagnosis: \"{diagnosis_name}\". Respond ONLY with JSON: {{\"description\": \"string\", \"causes\": [\"string\"], \"symptoms\": [\"string\"]}}"
     try:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="models/gemini-1.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json"
