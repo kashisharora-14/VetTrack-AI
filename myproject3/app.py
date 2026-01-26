@@ -39,6 +39,7 @@ except ImportError:  # when run as a script
         get_diagnosis_explanation_from_gemini,
     )
 
+app = Flask(__name__)
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -49,7 +50,7 @@ class Base(DeclarativeBase):
 load_dotenv()
 
 # Create Flask app
-app = Flask(__name__)
+
 # Upload folder (inside static) - ensure absolute path
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 
