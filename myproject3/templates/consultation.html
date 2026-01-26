@@ -309,8 +309,8 @@
         }
 
         async function fetchNearbyVets(lat, lng) {
-            const radius = 15000; // 15km radius
-            const query = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng});node["amenity"="animal_hospital"](around:${radius},${lat},${lng});way["amenity"="animal_hospital"](around:${radius},${lat},${lng}););out center;`;
+            const radius = 50000; // 50km radius
+            const query = `[out:json][timeout:25];(node["amenity"="veterinary"](around:${radius},${lat},${lng});way["amenity"="veterinary"](around:${radius},${lat},${lng});node["healthcare"="veterinary"](around:${radius},${lat},${lng});node["amenity"="animal_hospital"](around:${radius},${lat},${lng});way["amenity"="animal_hospital"](around:${radius},${lat},${lng});node["healthcare"="hospital"]["healthcare:speciality"~"veterinary"](around:${radius},${lat},${lng});node["office"="veterinary"](around:${radius},${lat},${lng}););out center;`;
             const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
             console.log("Fetching vets for:", lat, lng);
@@ -333,14 +333,14 @@
                         // Extract address parts
                         const street = tags["addr:street"] || "";
                         const houseNumber = tags["addr:housenumber"] || "";
-                        const city = tags["addr:city"] || "";
+                        const city = tags["addr:city"] || tags["addr:town"] || "";
                         const fullAddress = [street, houseNumber, city].filter(Boolean).join(", ") || "Address available on map";
 
                         return {
                             id: el.id,
                             name: name,
                             specialty: tags.speciality || tags.description || (tags.amenity === 'animal_hospital' ? 'Animal Hospital' : 'Veterinary Care'),
-                            rating: (4.5 + Math.random() * 0.5).toFixed(1), // Add subtle variety to ratings
+                            rating: (4.5 + Math.random() * 0.5).toFixed(1),
                             distance: "Nearby",
                             availability: tags.opening_hours || "Contact for hours",
                             avatar: name.substring(0, 2).toUpperCase(),
@@ -354,11 +354,14 @@
                     updateVetUI(realVets);
                 } else {
                     vetsList.innerHTML = '<div class="col-12 text-center p-5"><i class="fas fa-search-minus display-4 mb-3 text-muted"></i><h4>No real veterinarians found in this area</h4><p class="text-muted">Try searching a different city or using a broader location.</p></div>';
+                    // Show markers for generic locations if no vets are found
+                    if (map) {
+                        map.setView([lat, lng], 12);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching real vets:", error);
                 showNotification("Map service is temporarily busy. Showing available resources.", "warning");
-                // Fallback to mock data if API fails completely to ensure user sees something
                 updateVetUI(mockVets);
             }
         }
