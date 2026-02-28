@@ -2,11 +2,30 @@ import json
 import logging
 import os
 
-from google import genai
-from google.genai import types
+try:
+    from google import genai
+    from google.genai import types
+except Exception:
+    genai = None
+    types = None
 
 
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+def _build_client():
+    if genai is None:
+        logging.warning("Gemini SDK is not installed; using fallback analysis.")
+        return None
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        logging.warning("GEMINI_API_KEY is missing; using fallback analysis.")
+        return None
+    try:
+        return genai.Client(api_key=api_key)
+    except Exception as e:
+        logging.warning(f"Gemini client init failed: {e}")
+        return None
+
+
+client = _build_client()
 _MODEL_CACHE = None
 
 
@@ -30,6 +49,8 @@ def _normalize_model_name(name):
 
 
 def _discover_available_generate_models():
+    if client is None:
+        return []
     names = []
     try:
         for model in client.models.list():
@@ -71,6 +92,8 @@ def _resolve_model():
 
 def _generate_content_with_fallback(contents, config=None):
     global _MODEL_CACHE
+    if client is None:
+        raise RuntimeError("Gemini client unavailable")
 
     candidates = []
     primary = _resolve_model()
@@ -115,7 +138,7 @@ def analyze_pet_symptoms(pet, symptoms):
     try:
         response = _generate_content_with_fallback(
             contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
+            config=(types.GenerateContentConfig(response_mime_type="application/json") if types else None),
         )
         return json.loads(response.text)
     except Exception as e:
@@ -162,9 +185,9 @@ def analyze_pet_image(pet, image_path, description=""):
         response = _generate_content_with_fallback(
             contents=[
                 prompt,
-                types.Part.from_bytes(data=image_data, mime_type="image/jpeg"),
+                (types.Part.from_bytes(data=image_data, mime_type="image/jpeg") if types else image_data),
             ],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
+            config=(types.GenerateContentConfig(response_mime_type="application/json") if types else None),
         )
         return json.loads(response.text)
     except Exception as e:
@@ -180,7 +203,7 @@ def get_diagnosis_explanation_from_gemini(diagnosis_name):
     try:
         response = _generate_content_with_fallback(
             contents=prompt,
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
+            config=(types.GenerateContentConfig(response_mime_type="application/json") if types else None),
         )
         return json.loads(response.text)
     except Exception as e:
