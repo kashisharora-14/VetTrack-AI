@@ -1635,8 +1635,8 @@
 
     <script>
         function checkAuthAndRedirect(targetUrl) {
-            // Check if user is logged in by looking for user data in the template
-            const isLoggedIn = {{ (user is not none)|tojson }};
+            // Detect login state from rendered navbar (no Jinja inside JS).
+            const isLoggedIn = !!document.getElementById('navbarDropdown');
 
             if (isLoggedIn) {
                 // User is logged in, redirect to the target page
@@ -1676,5 +1676,4 @@
 </body>
 
 </html>
-
 

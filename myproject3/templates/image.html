@@ -337,15 +337,16 @@
                     ? [analysis.diagnosis]
                     : [];
 
-            const recommendation = analysis.recommendation || 'Not available';
+            const recommendation = analysis.recommendation || '';
             const severity = analysis.severity || 'Not Assessed';
-            const likelihood = analysis.condition_likelihood || analysis.conditionLikelihood || "Unknown";
+            const likelihood = analysis.condition_likelihood || analysis.conditionLikelihood || "";
             const urgency = analysis.urgency_level || "Not Specified";
+            const imageMismatch = analysis.image_match === false || analysis.image_result_status === 'not_available';
 
             // 🔹 Separate warning from diagnoses
-            const warningItem = diagnosis.find(d =>
-                d.toLowerCase().startsWith("warning:") ||
-                d.toLowerCase().startsWith("species mismatch")
+            const warningItem = analysis.warningItem || analysis.mismatch_reason || diagnosis.find(d =>
+                String(d).toLowerCase().startsWith("warning:") ||
+                String(d).toLowerCase().startsWith("species mismatch")
             );
 
             const cleanDiagnosis = diagnosis.filter(d =>
@@ -376,8 +377,15 @@
             const urgencyColors = { 'High': 'danger', 'Medium': 'warning', 'Low': 'success' };
             const urgencyColor = urgencyColors[urgency] || 'secondary';
 
-            // Build HTML
-            resultsContent.innerHTML = `
+            if (imageMismatch) {
+                resultsContent.innerHTML = `
+        ${warningItem ? `<div class="alert alert-warning mb-3"><i class="fas fa-exclamation-triangle me-2"></i>${warningItem}</div>` : ""}
+        <h6><i class="fas fa-eye text-success me-2"></i>AI Diagnosis</h6>
+        <div class="bg-light p-3 rounded">No analysis</div>
+    `;
+            } else {
+                // Build HTML
+                resultsContent.innerHTML = `
         <!-- Warning -->
         ${warningItem ? `<div class="alert alert-warning mb-3"><i class="fas fa-exclamation-triangle me-2"></i>${warningItem}</div>` : ""}
 
@@ -405,6 +413,7 @@
         <h6><i class="fas fa-clipboard-list text-success me-2"></i>Recommendations</h6>
         <div class="bg-light p-3 rounded">${recommendation}</div>
     `;
+            }
 
             // Show image + results
             document.getElementById('analyzedImage').src = imageUrl;

@@ -129,17 +129,34 @@ def analyze_pet_image(pet, image_path, description=""):
             image_data = f.read()
 
         prompt = f"""
-        You are a veterinary AI assistant specializing in visual health assessment.
-        Pet Information:
+        You are a veterinary AI assistant specializing in visual pet health assessment.
+        First task: verify whether the uploaded image matches the selected pet profile.
+
+        Selected Pet Profile:
         - Name: {pet.name}
         - Species: {pet.species}
         - Breed: {pet.breed}
         - Age: {pet.age} years
+        - User description: {description}
 
-        Description: {description}
+        IMPORTANT DECISION RULE:
+        - If species or visual context clearly does NOT match the selected pet, set image_match=false.
+        - If breed appears inconsistent with the selected breed, set image_match=false.
+        - If breed/species cannot be confirmed with high confidence, set image_match=false.
+        - If image is not a pet/unclear/unusable, set image_match=false.
+        - If image_match=false, return EMPTY analysis fields only:
+          diagnosis=[], possible_causes=[], recommendation="", condition_likelihood="", urgency_level="Not Assessed".
 
-        Respond ONLY with valid JSON:
-        {{"diagnosis": ["string1"], "condition_likelihood": "string", "recommendation": "string", "urgency_level": "string", "possible_causes": ["string1"]}}
+        Return ONLY strict JSON with this exact schema:
+        {{
+          "image_match": true|false,
+          "mismatch_reason": "string",
+          "diagnosis": ["string"],
+          "condition_likelihood": "string",
+          "recommendation": "string",
+          "urgency_level": "Low|Medium|High|Not Assessed",
+          "possible_causes": ["string"]
+        }}
         """
 
         response = _generate_content_with_fallback(
