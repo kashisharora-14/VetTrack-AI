@@ -8,6 +8,102 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .pet-premium-card {
+            border: 1px solid #dbe6f1;
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 14px 32px rgba(15, 39, 71, .08);
+            transition: transform .2s ease, box-shadow .2s ease;
+            overflow: hidden;
+        }
+        .pet-premium-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 38px rgba(15, 39, 71, .12);
+        }
+        .pet-hero {
+            padding: 1.15rem 1.1rem .2rem 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+        }
+        .pet-avatar {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e6eff8;
+            box-shadow: 0 8px 18px rgba(15, 39, 71, .1);
+        }
+        .pet-avatar-fallback {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            border: 4px solid #e6eff8;
+            background: linear-gradient(180deg, #edf5ff 0%, #e1efff 100%);
+            color: #2f80ed;
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: 0 8px 18px rgba(15, 39, 71, .1);
+        }
+        .pet-tag {
+            border: 1px solid #cfe1f3;
+            border-radius: 999px;
+            padding: .3rem .7rem;
+            font-size: .78rem;
+            color: #2e5d8f;
+            background: #f4f9ff;
+            font-weight: 700;
+        }
+        .pet-subtitle {
+            margin-top: .15rem;
+            color: #64748b;
+            font-size: .9rem;
+        }
+        .pet-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .45rem;
+            margin-top: .9rem;
+        }
+        .pet-stat-chip {
+            border: 1px solid #d9e7f4;
+            border-radius: 13px;
+            background: #f8fbff;
+            padding: .5rem .45rem;
+            text-align: center;
+        }
+        .pet-stat-chip i {
+            color: #2f80ed;
+            margin-right: .25rem;
+        }
+        .pet-stat-label {
+            display: block;
+            font-size: .68rem;
+            color: #7c8fa4;
+            line-height: 1;
+            margin-bottom: .2rem;
+        }
+        .pet-stat-value {
+            font-size: .78rem;
+            color: #183553;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .pet-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .55rem;
+            margin-top: .9rem;
+        }
+        .pet-action-btn {
+            border-radius: 12px;
+            font-weight: 700;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -440,6 +536,19 @@
                             <input type="number" class="form-control" id="petAge" min="0" max="50" required>
                         </div>
                         <div class="mb-3">
+                            <label for="petWeight" class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" id="petWeight" min="0" step="0.1"
+                                placeholder="e.g. 12.5">
+                        </div>
+                        <div class="mb-3">
+                            <label for="petGender" class="form-label">Gender</label>
+                            <select class="form-select" id="petGender">
+                                <option value="">Select gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="petPhoto" class="form-label">Profile Picture (Optional)</label>
                             <input type="file" class="form-control" id="petPhoto" name="profile_picture"
                                 accept="image/*">
@@ -796,30 +905,39 @@
 
             container.innerHTML = pets.map(pet => `
             <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    ${pet.profile_picture ? `
-<div class="text-center pt-3">
-    <img src="${pet.profile_picture}" 
-         alt="${pet.name}" 
-         class="rounded-circle" 
-         style="width: 80px; height: 80px; object-fit: cover;">
-</div>` : ''}
-
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h5 class="card-title">${pet.name}</h5>
-                            <span class="badge bg-primary">${pet.species}</span>
+                <div class="pet-premium-card h-100">
+                    <div class="pet-hero">
+                        ${pet.profile_picture ? `
+                            <img src="${pet.profile_picture}" alt="${pet.name}" class="pet-avatar">`
+                            : `<div class="pet-avatar-fallback">${(pet.name || 'P').charAt(0).toUpperCase()}</div>`
+                        }
+                        <span class="pet-tag">${pet.species || 'Pet'}</span>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="mb-2">
+                            <h5 class="card-title mb-0">${pet.name}</h5>
+                            <div class="pet-subtitle">${pet.breed || 'Unknown breed'}</div>
                         </div>
-                        <p class="card-text">
-                            <strong>Breed:</strong> ${pet.breed}<br>
-                            <strong>Age:</strong> ${pet.age} years
-                        </p>
+                        <div class="pet-stats-grid">
+                            <div class="pet-stat-chip">
+                                <span class="pet-stat-label">Age</span>
+                                <span class="pet-stat-value"><i class="fas fa-calendar"></i>${pet.age ?? 'N/A'} yr</span>
+                            </div>
+                            <div class="pet-stat-chip">
+                                <span class="pet-stat-label">Weight</span>
+                                <span class="pet-stat-value"><i class="fas fa-weight-scale"></i>${(pet.weight_kg !== null && pet.weight_kg !== undefined && pet.weight_kg !== '') ? Number(pet.weight_kg).toFixed(1) + ' kg' : 'N/A'}</span>
+                            </div>
+                            <div class="pet-stat-chip">
+                                <span class="pet-stat-label">Gender</span>
+                                <span class="pet-stat-value"><i class="fas fa-venus-mars"></i>${pet.gender || 'N/A'}</span>
+                            </div>
+                        </div>
                         ${pet.medical_notes ? `<p class="card-text text-muted"><small>${pet.medical_notes}</small></p>` : ''}
-                        <div class="btn-group w-100">
-                            <a href="/consultation/${pet.id}" class="btn btn-primary btn-sm">
+                        <div class="pet-actions">
+                            <a href="/consultation/${pet.id}" class="btn btn-primary btn-sm pet-action-btn">
                                 <i class="fas fa-user-md me-1"></i>Find Doctor
                             </a>
-                            <a href="/history?pet_id=${pet.id}" class="btn btn-outline-primary btn-sm">
+                            <a href="/history?pet_id=${pet.id}" class="btn btn-outline-primary btn-sm pet-action-btn">
                                 <i class="fas fa-history me-1"></i>History
                             </a>
                         </div>
@@ -841,6 +959,8 @@
             formData.append('species', document.getElementById('petSpecies').value);
             formData.append('breed', document.getElementById('petBreed').value);
             formData.append('age', document.getElementById('petAge').value);
+            formData.append('weight_kg', document.getElementById('petWeight').value);
+            formData.append('gender', document.getElementById('petGender').value);
             formData.append('medical_notes', document.getElementById('petNotes').value);
 
             if (photoFile) {

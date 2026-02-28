@@ -12,6 +12,28 @@
     <!-- Jitsi Meet API -->
     <script src="https://meet.jit.si/external_api.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .clinic-card {
+            transition: all 0.3s ease;
+        }
+        .clinic-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(13, 110, 253, 0.25) !important;
+        }
+        .clinic-card:hover img {
+            filter: brightness(0.95);
+        }
+        .clinic-card .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            transition: all 0.3s ease;
+        }
+        .clinic-card .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -33,20 +55,20 @@
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <!-- Location & Vet Search Section -->
+                <!-- Location & Clinic Search Section -->
                 <div id="vet-search-container">
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-body p-4 text-center">
                             <i class="fas fa-map-marker-alt text-primary display-4 mb-3"></i>
                             <h2 class="fw-bold">Find an Available Veterinarian</h2>
-                            <p class="text-muted">Enter your location to see vets available for a consultation right now.</p>
+                            <p class="text-muted">Enter your location to see clinics available for a consultation right now.</p>
                             
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-8">
                                     <div class="input-group input-group-lg shadow-sm">
                                         <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
                                         <input type="text" id="locationInput" class="form-control border-start-0" placeholder="Enter city, state or zip code...">
-                                        <button class="btn btn-primary px-4" onclick="searchVets()">Search Vets</button>
+                                        <button class="btn btn-primary px-4" onclick="searchClinics()">Search Clinics</button>
                                     </div>
                                     <div class="mt-2 text-start d-flex gap-3">
                                         <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="useCurrentLocation()">
@@ -62,8 +84,41 @@
                         </div>
                     </div>
 
-                    <!-- Available Vets List -->
+                    <!-- Available Clinics List -->
                     <div id="vetsList" class="row g-4" style="display: none;">
+                        {% for clinic in clinics %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card clinic-card shadow-sm border-0 h-100" style="cursor: pointer; transition: all 0.3s ease;">
+                                {% if clinic.image %}
+                                    <img src="{{ url_for('static', filename='uploads/' + clinic.image) }}" style="width: 100%; height: 200px; object-fit: cover;" alt="{{ clinic.name }}">
+                                {% else %}
+                                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white;">
+                                        <i class="fas fa-hospital fa-3x"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ clinic.name }}</h5>
+                                    <p class="card-text text-muted small">
+                                        <i class="fas fa-map-marker-alt"></i> {{ clinic.address }}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <i class="fas fa-star text-warning"></i> {{ clinic.rating }}
+                                            <span class="text-muted small">({{ clinic.review_count }})</span>
+                                        </div>
+                                        {% if clinic.is_open %}
+                                            <span class="badge bg-success"><i class="fas fa-circle" style="font-size: 0.6rem;"></i> Open</span>
+                                        {% else %}
+                                            <span class="badge bg-danger"><i class="fas fa-circle" style="font-size: 0.6rem;"></i> Closed</span>
+                                        {% endif %}
+                                    </div>
+                                    <button class="btn btn-primary btn-sm w-100" onclick="selectVet('{{ clinic.name }}')">
+                                        <i class="fas fa-check"></i> Select Clinic
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -166,6 +221,20 @@
             L.marker([lat, lng], { icon: dogIcon }).addTo(map).bindPopup('<b>You and Your Pet</b>').openPopup();
         }
 
+        function selectVet(vetName) {
+            startVetConsultation(vetName);
+        }
+
+        function searchClinics() {
+            const location = document.getElementById('locationInput').value;
+            if (!location) {
+                alert("Please enter a location");
+                return;
+            }
+            updateStatus('Found Clinics', 'success');
+            document.getElementById('vetsList').style.display = '';
+        }
+
         async function useCurrentLocation() {
             updateStatus('Locating...', 'info');
             if (!navigator.geolocation) {
@@ -178,7 +247,7 @@
                 const lng = position.coords.longitude;
                 console.log("Geolocation success:", lat, lng);
                 initMap(lat, lng);
-                await fetchNearbyVets(lat, lng);
+                document.getElementById('vetsList').style.display = '';
                 updateStatus('Location Found', 'success');
             }, (error) => {
                 console.error("Geolocation error:", error);
@@ -362,6 +431,10 @@
                 });
             }
             vetsList.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectVet(vetName) {
+            startVetConsultation(vetName);
         }
 
         function startVetConsultation(vetName) {

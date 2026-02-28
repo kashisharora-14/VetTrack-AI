@@ -8,6 +8,423 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .food-manager-shell {
+            background:
+                radial-gradient(circle at 12% 16%, rgba(37, 99, 235, .14) 0%, rgba(37, 99, 235, 0) 36%),
+                radial-gradient(circle at 86% 84%, rgba(34, 197, 94, .15) 0%, rgba(34, 197, 94, 0) 38%),
+                linear-gradient(180deg, #f8fbff 0%, #f5fbf7 100%);
+            border: 1px solid #cfe0f2;
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 14px 34px rgba(15, 39, 71, .09);
+        }
+        .food-manager-shell::before {
+            content: "";
+            position: absolute;
+            top: -70px;
+            right: -70px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, .15) 0%, rgba(59, 130, 246, 0) 70%);
+            pointer-events: none;
+        }
+        .food-manager-shell::after {
+            content: "";
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(34, 197, 94, .12) 0%, rgba(34, 197, 94, 0) 70%);
+            pointer-events: none;
+        }
+        .food-hero {
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, .32);
+            border-radius: 16px;
+            padding: .9rem 1rem;
+            background: linear-gradient(108deg, #1d4ed8 0%, #0ea5e9 52%, #22c55e 100%);
+            margin-bottom: 1rem;
+            box-shadow: 0 14px 30px rgba(14, 116, 144, .25);
+        }
+        .food-hero .fw-bold,
+        .food-hero small {
+            color: #fff !important;
+        }
+        .mode-toggle {
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-radius: 12px;
+            padding: 4px;
+            background: rgba(255, 255, 255, .18);
+            backdrop-filter: blur(6px);
+            display: inline-flex;
+            gap: 6px;
+        }
+        .mode-toggle .btn {
+            border-radius: 9px;
+            border: none;
+            font-size: .8rem;
+            font-weight: 700;
+            color: #64748b;
+            padding: .35rem .8rem;
+        }
+        .mode-toggle .btn.active {
+            background: #ffffff;
+            color: #0f172a;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .2);
+        }
+        .food-section-title {
+            letter-spacing: .2px;
+            font-size: .83rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .food-card {
+            border: 1px solid #dfeaf5;
+            border-radius: 16px;
+            background: #ffffff;
+            padding: 14px;
+            height: auto;
+            box-shadow: 0 6px 18px rgba(15, 39, 71, .05);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+        .food-metric-card {
+            min-height: 116px;
+        }
+        .food-card:hover {
+            transform: translateY(-2px);
+            border-color: #c9ddf0;
+            box-shadow: 0 10px 24px rgba(15, 39, 71, .08);
+        }
+        .food-card.soft-blue {
+            background: linear-gradient(180deg, #eaf4ff 0%, #e3f0ff 100%);
+        }
+        .food-card.soft-green {
+            background: linear-gradient(180deg, #ecfff1 0%, #e4fbed 100%);
+        }
+        .food-card.soft-amber {
+            background: linear-gradient(180deg, #fff8ec 0%, #fff2da 100%);
+        }
+        .food-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #475569;
+            padding: 5px 10px;
+            font-size: .78rem;
+            margin: 0 6px 6px 0;
+        }
+        .food-item-btn {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: .65rem .85rem;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: .65rem;
+            transition: all .2s ease;
+        }
+        .food-item-btn:hover {
+            background: #f8fafc;
+        }
+        .food-item-btn.marked {
+            border-color: #86efac;
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .food-logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb;
+            background: #fff;
+            margin-right: 8px;
+        }
+        .food-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .meal-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: .8rem;
+        }
+        .meal-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: .9rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+            transition: all .2s ease;
+        }
+        .meal-card:hover {
+            border-color: #c9ddf0;
+            box-shadow: 0 8px 18px rgba(15, 39, 71, .08);
+        }
+        .meal-card.marked {
+            border-color: #34d399;
+            background: linear-gradient(180deg, #effff4 0%, #e7fff1 100%);
+            box-shadow: 0 6px 14px rgba(22, 101, 52, .08);
+        }
+        .meal-meta {
+            display: flex;
+            gap: .35rem;
+            flex-wrap: wrap;
+            margin-top: .45rem;
+        }
+        .meal-meta .badge {
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc !important;
+            color: #334155 !important;
+        }
+        .meal-meta .badge:nth-child(2) {
+            background: #eefdf3 !important;
+            color: #166534 !important;
+            border-color: #c8f0d7;
+        }
+        .meal-meta .badge:nth-child(3) {
+            background: #eef8ff !important;
+            color: #0f4c81 !important;
+            border-color: #cde5f7;
+        }
+        .meal-meta .badge:nth-child(4) {
+            background: #fff7ea !important;
+            color: #92400e !important;
+            border-color: #f5ddbe;
+        }
+        .food-actions .btn {
+            border-radius: 10px;
+            min-width: 34px;
+        }
+        .food-actions .btn-outline-success {
+            border-color: #86efac;
+            color: #15803d;
+            background: #f0fdf4;
+        }
+        .food-actions .btn-outline-primary {
+            border-color: #93c5fd;
+            color: #1d4ed8;
+            background: #eff6ff;
+        }
+        .food-actions .btn-outline-danger {
+            border-color: #fda4af;
+            color: #be123c;
+            background: #fff1f2;
+        }
+        .food-plan-input {
+            border-radius: 10px;
+            border-color: #d6e2ee;
+            background: #fcfdff;
+        }
+        .food-plan-input:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+        }
+        .ring-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .6rem;
+            margin-top: .6rem;
+            margin-bottom: .55rem;
+        }
+        .macro-ring {
+            background: #fff;
+            border: 1px solid #deebf6;
+            border-radius: 12px;
+            padding: .55rem .35rem;
+            text-align: center;
+        }
+        .macro-ring-track {
+            --ringColor: #2563eb;
+            --ringValue: 0deg;
+            width: 54px;
+            height: 54px;
+            border-radius: 999px;
+            margin: 0 auto .4rem;
+            background:
+                radial-gradient(closest-side, #fff 74%, transparent 75% 100%),
+                conic-gradient(var(--ringColor) var(--ringValue), #e2e8f0 0);
+            display: grid;
+            place-items: center;
+            font-size: .72rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .macro-ring small {
+            font-size: .72rem;
+            color: #64748b;
+        }
+        .macro-graph {
+            border: 1px solid #deebf6;
+            border-radius: 14px;
+            padding: .75rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            min-height: 210px;
+        }
+        .macro-canvas-wrap {
+            border: 1px solid #dbe8f5;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+            padding: .4rem;
+            margin-top: .55rem;
+        }
+        .macro-graph-row {
+            margin-bottom: .7rem;
+        }
+        .macro-graph-row:last-child {
+            margin-bottom: 0;
+        }
+        .macro-graph-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: .78rem;
+            color: #475569;
+            margin-bottom: .25rem;
+        }
+        .bar-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #e5edf6;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-selected {
+            height: 100%;
+            border-radius: 999px;
+            transition: width .35s ease;
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        }
+        #fpScoreBar {
+            background: linear-gradient(90deg, #2563eb 0%, #06b6d4 55%, #22c55e 100%);
+        }
+        .bar-target {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #0f172a;
+            opacity: .75;
+        }
+        .graph-legend {
+            display: flex;
+            gap: .8rem;
+            font-size: .72rem;
+            color: #64748b;
+            margin-top: .45rem;
+        }
+        .graph-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .calendar-theme-card {
+            border: 1px solid #cfe0f2;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(15, 39, 71, .08);
+        }
+        .calendar-theme-head {
+            background: linear-gradient(105deg, #1d4ed8 0%, #0ea5e9 55%, #22c55e 100%);
+            color: #fff;
+            border-bottom: none;
+        }
+        .calendar-theme-head h6 {
+            color: #fff;
+            font-weight: 700;
+        }
+        .mini-cal-wrap {
+            border: 1px solid #dbe8f5;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #f4f9ff 100%);
+            padding: .7rem .6rem .55rem;
+        }
+        .mini-cal-month {
+            text-align: center;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: .35rem;
+        }
+        .mini-cal-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 6px;
+            font-size: .82rem;
+        }
+        .mini-cal-table th {
+            font-size: .72rem;
+            color: #64748b;
+            font-weight: 700;
+            text-align: center;
+            padding-bottom: .15rem;
+        }
+        .mini-cal-table td {
+            text-align: center;
+            vertical-align: top;
+            width: 14.2%;
+        }
+        .mini-cal-day {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto;
+            color: #1e293b;
+            font-weight: 600;
+            transition: all .18s ease;
+            border: 1px solid transparent;
+        }
+        .mini-cal-day:hover {
+            background: #eaf4ff;
+            border-color: #bfdbfe;
+        }
+        .mini-cal-day.today {
+            background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, .3);
+        }
+        .mini-cal-dots {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 2px;
+            min-height: 6px;
+        }
+        .mini-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 999px;
+        }
+        .mini-dot.history { background: #10b981; }
+        .mini-dot.reminder { background: #f59e0b; }
+        .mini-cal-legend {
+            margin-top: .45rem;
+            display: flex;
+            justify-content: center;
+            gap: .8rem;
+            font-size: .75rem;
+            color: #64748b;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -36,6 +453,207 @@
                         <i class="fas fa-calendar-heart text-success display-4 mb-3"></i>
                         <h1 class="h2 fw-bold">Wellness Tracker</h1>
                         <p class="text-muted">Keep track of your pet's preventive care schedule and health milestones</p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-bowl-food me-2"></i>Animal Food Plan Manager</h5>
+                    </div>
+                    <div class="card-body food-manager-shell">
+                        <div class="food-hero d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <div class="fw-bold text-dark"><i class="fas fa-sparkles text-primary me-1"></i>Smart Food Planner</div>
+                                <small class="text-muted">Track selected meals and compare intake vs target macros.</small>
+                            </div>
+                            <div class="mode-toggle">
+                                <button id="fpModeDaily" class="btn active" type="button" onclick="setFoodViewMode('daily')">Today</button>
+                                <button id="fpModeWeekly" class="btn" type="button" onclick="setFoodViewMode('weekly')">Weekly</button>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Animal type</label>
+                                <select id="fpAnimalType" class="form-select food-plan-input">
+                                    <option value="Dog">Dog</option>
+                                    <option value="Cat">Cat</option>
+                                    <option value="Rabbit">Rabbit</option>
+                                    <option value="Bird">Bird</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Age (years)</label>
+                                <input id="fpAge" type="number" class="form-control food-plan-input" value="3" min="0.5" step="0.5">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Current weight (kg)</label>
+                                <input id="fpCurrentWeight" type="number" class="form-control food-plan-input" value="20" min="0.5" step="0.1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Target weight (kg)</label>
+                                <input id="fpTargetWeight" type="number" class="form-control food-plan-input" value="18" min="0" step="0.1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Activity level</label>
+                                <select id="fpActivityLevel" class="form-select food-plan-input">
+                                    <option value="low">Low</option>
+                                    <option value="moderate" selected>Moderate</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fitness goal</label>
+                                <select id="fpFitnessGoal" class="form-select food-plan-input">
+                                    <option value="Weight Loss">Weight Loss</option>
+                                    <option value="Weight Gain">Weight Gain</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Muscle Building">Muscle Building</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Diet duration (weeks)</label>
+                                <input id="fpDurationWeeks" type="number" class="form-control food-plan-input" value="8" min="1" max="52">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="food-card food-metric-card soft-blue">
+                                    <div class="food-section-title"><i class="fas fa-fire me-1"></i>Total daily calories</div>
+                                    <div class="h5 mb-1 mt-1" id="fpCalories">0 kcal</div>
+                                    <small class="text-muted" id="fpMaintenance">Maintenance: 0 kcal</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="food-card food-metric-card soft-green">
+                                    <div class="food-section-title"><i class="fas fa-chart-pie me-1"></i>Macro breakdown</div>
+                                    <div class="small mt-1" id="fpProtein">Protein: 0 g/day</div>
+                                    <div class="small" id="fpFats">Fats: 0 g/day</div>
+                                    <div class="small" id="fpCarbs">Carbs: 0 g/day</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="food-card food-metric-card soft-amber">
+                                    <div class="food-section-title"><i class="fas fa-droplet me-1"></i>Hydration & feeding</div>
+                                    <div class="small mt-1" id="fpFeeding">Feeding: 0 meals/day</div>
+                                    <div class="small" id="fpWater">Water: 0 ml/day</div>
+                                    <div class="small" id="fpWeeklyDelta">Weekly change: 0 kg/week</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="food-card">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="small fw-semibold text-muted"><i class="fas fa-utensils me-1"></i>Suggested foods</div>
+                                        <span class="badge text-bg-success" id="fpMarkedCount">0/0 marked</span>
+                                    </div>
+                                    <div class="input-group input-group-sm mb-2">
+                                        <input id="fpNewFoodInput" type="text" class="form-control" placeholder="Add custom food">
+                                        <button class="btn btn-outline-primary" type="button" onclick="addFoodItem()">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="clearFoodMarks()">
+                                            Unmark All
+                                        </button>
+                                    </div>
+                                    <div id="fpFoodsContainer" class="meal-grid"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex flex-column gap-3">
+                                <div class="food-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="small fw-semibold text-muted"><i class="fas fa-trophy me-1"></i>Food Plan Score</div>
+                                        <span class="badge text-bg-primary" id="fpScoreText">0%</span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div id="fpScoreBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted">Score updates when you click and mark foods.</small>
+
+                                    <div class="macro-canvas-wrap">
+                                        <canvas id="fpMacroCanvas" height="180"></canvas>
+                                    </div>
+                                </div>
+                                <div class="food-card">
+                                    <div class="small fw-semibold text-muted mb-2"><i class="fas fa-bolt me-1"></i>Selected Intake (Marked Foods)</div>
+                                    <div class="small" id="fpSelectedCalories">Calories: 0 kcal</div>
+                                    <div class="small" id="fpSelectedProtein">Protein: 0 g</div>
+                                    <div class="small" id="fpSelectedCarbs">Carbs: 0 g</div>
+                                    <div class="small" id="fpSelectedFats">Fats: 0 g</div>
+                                    <div class="ring-grid">
+                                        <div class="macro-ring">
+                                            <div id="fpProteinRing" class="macro-ring-track" style="--ringColor:#16a34a;--ringValue:0deg;">0%</div>
+                                            <small>Protein</small>
+                                        </div>
+                                        <div class="macro-ring">
+                                            <div id="fpCarbsRing" class="macro-ring-track" style="--ringColor:#0ea5e9;--ringValue:0deg;">0%</div>
+                                            <small>Carbs</small>
+                                        </div>
+                                        <div class="macro-ring">
+                                            <div id="fpFatsRing" class="macro-ring-track" style="--ringColor:#f59e0b;--ringValue:0deg;">0%</div>
+                                            <small>Fats</small>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2 mb-1" style="height: 7px;">
+                                        <div id="fpProteinProgress" class="progress-bar bg-success" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="fpProteinProgressText">Protein target progress: 0%</small>
+                                    <div class="progress mt-2 mb-1" style="height: 7px;">
+                                        <div id="fpCarbsProgress" class="progress-bar bg-info" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="fpCarbsProgressText">Carbs target progress: 0%</small>
+                                </div>
+                                <div class="food-card">
+                                    <div class="small fw-semibold text-muted mb-2"><i class="fas fa-capsules me-1"></i>Important micronutrients</div>
+                                    <div id="fpMicronutrients"></div>
+                                </div>
+                                <div class="food-card">
+                                    <div class="small fw-semibold text-muted mb-2"><i class="fas fa-chart-column me-1"></i>Macro Comparison Graph</div>
+                                    <div class="macro-graph">
+                                        <div class="macro-graph-row">
+                                            <div class="macro-graph-label">
+                                                <span>Protein</span>
+                                                <span id="fpGraphProteinText">0 / 0 g</span>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div id="fpGraphProteinBar" class="bar-selected" style="width: 0%"></div>
+                                                <span class="bar-target" style="left: 100%"></span>
+                                            </div>
+                                        </div>
+                                        <div class="macro-graph-row">
+                                            <div class="macro-graph-label">
+                                                <span>Carbs</span>
+                                                <span id="fpGraphCarbsText">0 / 0 g</span>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div id="fpGraphCarbsBar" class="bar-selected" style="width: 0%; background: linear-gradient(90deg, #38bdf8 0%, #0284c7 100%);"></div>
+                                                <span class="bar-target" style="left: 100%"></span>
+                                            </div>
+                                        </div>
+                                        <div class="macro-graph-row">
+                                            <div class="macro-graph-label">
+                                                <span>Fats</span>
+                                                <span id="fpGraphFatsText">0 / 0 g</span>
+                                            </div>
+                                            <div class="bar-track">
+                                                <div id="fpGraphFatsBar" class="bar-selected" style="width: 0%; background: linear-gradient(90deg, #fbbf24 0%, #d97706 100%);"></div>
+                                                <span class="bar-target" style="left: 100%"></span>
+                                            </div>
+                                        </div>
+                                        <div class="graph-legend">
+                                            <span><i class="graph-dot" style="background:#16a34a;"></i>Selected intake</span>
+                                            <span><i class="graph-dot" style="background:#0f172a;"></i>Target marker</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="food-card">
+                                    <div class="small fw-semibold text-muted mb-2"><i class="fas fa-robot me-1"></i>AI Summary</div>
+                                    <small id="fpAiSummary" class="text-muted"></small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -147,8 +765,8 @@
                 </div>
 
                 <!-- Calendar Widget -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header">
+                <div class="card shadow-sm mb-4 calendar-theme-card">
+                    <div class="card-header calendar-theme-head">
                         <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>This Month</h6>
                     </div>
                     <div class="card-body">
@@ -240,6 +858,59 @@
     <script>
         // Flag to prevent multiple announcements
         let hasAnnouncedReminders = false;
+        let markedFoods = [];
+        let foodPlanFoodsByAnimal = {};
+        let currentFoodMacroTargets = { protein: 0, carbs: 0, fats: 0 };
+        let fpViewMode = 'daily';
+
+        const fpActivityFactors = { low: 1.2, moderate: 1.4, high: 1.7 };
+        const fpGoalAdjustments = { 'Weight Loss': 0.85, 'Weight Gain': 1.15, 'Maintenance': 1, 'Muscle Building': 1.1 };
+        const fpMacroProfiles = {
+            'Weight Loss': { protein: 0.35, fats: 0.30, carbs: 0.35 },
+            'Weight Gain': { protein: 0.25, fats: 0.25, carbs: 0.50 },
+            'Maintenance': { protein: 0.30, fats: 0.30, carbs: 0.40 },
+            'Muscle Building': { protein: 0.40, fats: 0.25, carbs: 0.35 },
+        };
+        const fpFoodOptionsByAnimal = {
+            Dog: [
+                { name: 'Lean chicken breast', icon: 'fa-drumstick-bite', serving: '100g', calories: 165, protein: 31, carbs: 0, fats: 3.6 },
+                { name: 'Brown rice', icon: 'fa-wheat-awn', serving: '120g cooked', calories: 135, protein: 2.8, carbs: 28, fats: 1 },
+                { name: 'Pumpkin puree', icon: 'fa-carrot', serving: '100g', calories: 26, protein: 1, carbs: 6.5, fats: 0.1 },
+                { name: 'Salmon oil', icon: 'fa-fish', serving: '1 tsp', calories: 40, protein: 0, carbs: 0, fats: 4.5 },
+                { name: 'Carrots', icon: 'fa-carrot', serving: '100g', calories: 41, protein: 0.9, carbs: 10, fats: 0.2 },
+                { name: 'Low-fat yogurt', icon: 'fa-jar', serving: '100g', calories: 63, protein: 5.5, carbs: 7, fats: 1.6 },
+            ],
+            Cat: [
+                { name: 'Turkey thigh', icon: 'fa-drumstick-bite', serving: '100g', calories: 170, protein: 28, carbs: 0, fats: 6 },
+                { name: 'Egg whites', icon: 'fa-egg', serving: '2 whites', calories: 34, protein: 7.2, carbs: 0.5, fats: 0.1 },
+                { name: 'Pumpkin puree', icon: 'fa-carrot', serving: '80g', calories: 21, protein: 0.8, carbs: 5.2, fats: 0.1 },
+                { name: 'Sardines in water', icon: 'fa-fish', serving: '60g', calories: 125, protein: 14.5, carbs: 0, fats: 7 },
+                { name: 'Spinach', icon: 'fa-leaf', serving: '50g', calories: 12, protein: 1.5, carbs: 1.8, fats: 0.2 },
+                { name: 'Bone broth', icon: 'fa-mug-hot', serving: '100ml', calories: 15, protein: 3, carbs: 0, fats: 0.2 },
+            ],
+            Rabbit: [
+                { name: 'Timothy hay', icon: 'fa-wheat-awn', serving: '30g', calories: 75, protein: 3.6, carbs: 12, fats: 1 },
+                { name: 'Romaine lettuce', icon: 'fa-leaf', serving: '100g', calories: 17, protein: 1.2, carbs: 3.3, fats: 0.3 },
+                { name: 'Bell pepper', icon: 'fa-carrot', serving: '80g', calories: 20, protein: 0.7, carbs: 4.8, fats: 0.2 },
+                { name: 'Parsley', icon: 'fa-leaf', serving: '30g', calories: 11, protein: 0.9, carbs: 1.9, fats: 0.2 },
+                { name: 'Pellets (measured)', icon: 'fa-bowl-food', serving: '25g', calories: 90, protein: 4.5, carbs: 14, fats: 1.5 },
+                { name: 'Cilantro', icon: 'fa-leaf', serving: '30g', calories: 7, protein: 0.6, carbs: 1.2, fats: 0.1 },
+            ],
+            Bird: [
+                { name: 'High-quality pellets', icon: 'fa-bowl-food', serving: '20g', calories: 70, protein: 3.5, carbs: 10, fats: 2 },
+                { name: 'Leafy greens', icon: 'fa-leaf', serving: '40g', calories: 12, protein: 1.2, carbs: 2, fats: 0.2 },
+                { name: 'Cooked quinoa', icon: 'fa-wheat-awn', serving: '50g', calories: 60, protein: 2.2, carbs: 10.5, fats: 1 },
+                { name: 'Carrot shreds', icon: 'fa-carrot', serving: '40g', calories: 16, protein: 0.4, carbs: 4, fats: 0.1 },
+                { name: 'Apple slices', icon: 'fa-apple-whole', serving: '40g', calories: 21, protein: 0.1, carbs: 5.5, fats: 0.1 },
+                { name: 'Millet (limited)', icon: 'fa-wheat-awn', serving: '15g', calories: 56, protein: 1.7, carbs: 11.1, fats: 0.6 },
+            ]
+        };
+        const fpMicronutrientsByAnimal = {
+            Dog: ['Omega-3', 'Calcium', 'Vitamin D', 'Zinc'],
+            Cat: ['Taurine', 'Omega-3', 'Vitamin A', 'B-Complex'],
+            Rabbit: ['Fiber', 'Calcium', 'Vitamin A', 'Manganese'],
+            Bird: ['Vitamin A', 'Calcium', 'Iodine', 'Vitamin E']
+        };
 
         // Reset flag when page is refreshed or navigated to
         window.addEventListener('beforeunload', function() {
@@ -252,7 +923,363 @@
             loadReminders();
             loadWellnessInsights();
             generateMiniCalendar(); // Generate calendar on page load
+            initFoodPlanManager();
         });
+
+        function initFoodPlanManager() {
+            foodPlanFoodsByAnimal = JSON.parse(JSON.stringify(fpFoodOptionsByAnimal));
+            document.querySelectorAll('.food-plan-input').forEach(input => {
+                input.addEventListener('input', calculateFoodPlan);
+                input.addEventListener('change', calculateFoodPlan);
+            });
+            calculateFoodPlan();
+        }
+
+        function setFoodViewMode(mode) {
+            fpViewMode = mode;
+            document.getElementById('fpModeDaily').classList.toggle('active', mode === 'daily');
+            document.getElementById('fpModeWeekly').classList.toggle('active', mode === 'weekly');
+            updateSelectedNutrition();
+        }
+
+        function roundNumber(value) {
+            return Math.round(value);
+        }
+
+        function calculateFoodPlan() {
+            const animalType = document.getElementById('fpAnimalType').value;
+            const age = parseFloat(document.getElementById('fpAge').value) || 0;
+            const currentWeight = parseFloat(document.getElementById('fpCurrentWeight').value) || 0;
+            const targetWeight = parseFloat(document.getElementById('fpTargetWeight').value) || 0;
+            const activityLevel = document.getElementById('fpActivityLevel').value;
+            const fitnessGoal = document.getElementById('fpFitnessGoal').value;
+            const durationWeeks = parseFloat(document.getElementById('fpDurationWeeks').value) || 1;
+
+            const baseRer = 70 * Math.pow(Math.max(currentWeight, 0.1), 0.75);
+            const maintenanceCalories = baseRer * (fpActivityFactors[activityLevel] || 1.2);
+            const adjustedCalories = maintenanceCalories * (fpGoalAdjustments[fitnessGoal] || 1);
+            const profile = fpMacroProfiles[fitnessGoal] || fpMacroProfiles['Maintenance'];
+
+            const proteinGrams = (adjustedCalories * profile.protein) / 4;
+            const fatGrams = (adjustedCalories * profile.fats) / 9;
+            const carbGrams = (adjustedCalories * profile.carbs) / 4;
+            currentFoodMacroTargets = { protein: proteinGrams, carbs: carbGrams, fats: fatGrams };
+            const mealsPerDay = animalType === 'Cat' ? 3 : 2;
+            const waterMl = currentWeight * 55;
+            const weeklyDelta = durationWeeks > 0 ? ((targetWeight - currentWeight) / durationWeeks) : 0;
+
+            const foods = foodPlanFoodsByAnimal[animalType] || foodPlanFoodsByAnimal.Dog || [];
+            const micronutrients = fpMicronutrientsByAnimal[animalType] || fpMicronutrientsByAnimal.Dog;
+
+            document.getElementById('fpCalories').textContent = `${roundNumber(adjustedCalories)} kcal`;
+            document.getElementById('fpMaintenance').textContent = `Maintenance: ${roundNumber(maintenanceCalories)} kcal`;
+            document.getElementById('fpProtein').textContent = `Protein: ${roundNumber(proteinGrams)} g/day`;
+            document.getElementById('fpFats').textContent = `Fats: ${roundNumber(fatGrams)} g/day`;
+            document.getElementById('fpCarbs').textContent = `Carbs: ${roundNumber(carbGrams)} g/day`;
+            document.getElementById('fpFeeding').textContent = `Feeding: ${mealsPerDay} meals/day`;
+            document.getElementById('fpWater').textContent = `Water: ${roundNumber(waterMl)} ml/day`;
+            document.getElementById('fpWeeklyDelta').textContent = `Weekly change: ${weeklyDelta.toFixed(2)} kg/week`;
+
+            document.getElementById('fpAiSummary').textContent =
+                `For a ${age}-year-old ${animalType.toLowerCase()} with a ${fitnessGoal.toLowerCase()} goal, the plan targets ${roundNumber(adjustedCalories)} kcal/day across ${mealsPerDay} feedings with protein-focused balance.`;
+
+            renderMicronutrients(micronutrients);
+            renderFoods(foods);
+        }
+
+        function renderMicronutrients(microList) {
+            const container = document.getElementById('fpMicronutrients');
+            container.innerHTML = microList.map(item => `<span class="food-chip"><i class="fas fa-circle-dot"></i>${item}</span>`).join('');
+        }
+
+        function renderFoods(foods) {
+            markedFoods = markedFoods.filter(name => foods.some(food => food.name === name));
+            const container = document.getElementById('fpFoodsContainer');
+            container.innerHTML = foods.map(food => {
+                const marked = markedFoods.includes(food.name);
+                return `
+                    <div class="meal-card ${marked ? 'marked' : ''}">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <span class="food-logo"><i class="fas ${food.icon}"></i></span>
+                                <div>
+                                    <div class="fw-semibold">${food.name}</div>
+                                    <small class="text-muted">Serving: ${food.serving || 'custom'}</small>
+                                </div>
+                            </div>
+                            <div class="food-actions">
+                            <button class="btn btn-sm ${marked ? 'btn-success' : 'btn-outline-success'}" type="button" onclick="toggleFoodMark('${food.name.replace(/'/g, "\\'")}')">
+                                ${marked ? '<i class="fas fa-circle-check"></i>' : '<i class="far fa-circle"></i>'}
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" type="button" onclick="editFoodItem('${food.name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" type="button" onclick="deleteFoodItem('${food.name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            </div>
+                        </div>
+                        <div class="meal-meta">
+                            <span class="badge text-bg-light">${food.calories || 0} kcal</span>
+                            <span class="badge text-bg-light">P ${Number(food.protein || 0).toFixed(1)}g</span>
+                            <span class="badge text-bg-light">C ${Number(food.carbs || 0).toFixed(1)}g</span>
+                            <span class="badge text-bg-light">F ${Number(food.fats || 0).toFixed(1)}g</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            updateFoodPlanScore(foods.length);
+        }
+
+        function toggleFoodMark(foodName) {
+            if (markedFoods.includes(foodName)) {
+                markedFoods = markedFoods.filter(item => item !== foodName);
+            } else {
+                markedFoods.push(foodName);
+            }
+            calculateFoodPlan();
+        }
+
+        function updateFoodPlanScore(totalFoods) {
+            const safeTotal = totalFoods || 1;
+            const score = roundNumber((markedFoods.length / safeTotal) * 100);
+            document.getElementById('fpScoreText').textContent = `${score}%`;
+            document.getElementById('fpScoreBar').style.width = `${score}%`;
+            document.getElementById('fpMarkedCount').textContent = `${markedFoods.length}/${totalFoods} marked`;
+            updateSelectedNutrition();
+        }
+
+        function updateSelectedNutrition() {
+            const animalType = getSelectedAnimalType();
+            const foods = foodPlanFoodsByAnimal[animalType] || [];
+            const selectedFoods = foods.filter(food => markedFoods.includes(food.name));
+
+            const totals = selectedFoods.reduce((acc, food) => {
+                acc.calories += Number(food.calories || 0);
+                acc.protein += Number(food.protein || 0);
+                acc.carbs += Number(food.carbs || 0);
+                acc.fats += Number(food.fats || 0);
+                return acc;
+            }, { calories: 0, protein: 0, carbs: 0, fats: 0 });
+
+            const multiplier = fpViewMode === 'weekly' ? 7 : 1;
+            const proteinTarget = currentFoodMacroTargets.protein * multiplier;
+            const carbsTarget = currentFoodMacroTargets.carbs * multiplier;
+            const fatsTarget = currentFoodMacroTargets.fats * multiplier;
+
+            const proteinProgress = proteinTarget > 0 ? Math.min(100, (totals.protein / proteinTarget) * 100) : 0;
+            const carbsProgress = carbsTarget > 0 ? Math.min(100, (totals.carbs / carbsTarget) * 100) : 0;
+            const fatsProgress = fatsTarget > 0 ? Math.min(100, (totals.fats / fatsTarget) * 100) : 0;
+
+            document.getElementById('fpSelectedCalories').textContent = `Calories: ${roundNumber(totals.calories)} kcal`;
+            document.getElementById('fpSelectedProtein').textContent = `Protein: ${totals.protein.toFixed(1)} g`;
+            document.getElementById('fpSelectedCarbs').textContent = `Carbs: ${totals.carbs.toFixed(1)} g`;
+            document.getElementById('fpSelectedFats').textContent = `Fats: ${totals.fats.toFixed(1)} g`;
+            document.getElementById('fpProteinProgress').style.width = `${proteinProgress}%`;
+            document.getElementById('fpCarbsProgress').style.width = `${carbsProgress}%`;
+            document.getElementById('fpProteinProgressText').textContent = `Protein ${fpViewMode} target: ${roundNumber(proteinProgress)}% (${proteinTarget.toFixed(0)}g target)`;
+            document.getElementById('fpCarbsProgressText').textContent = `Carbs ${fpViewMode} target: ${roundNumber(carbsProgress)}% (${carbsTarget.toFixed(0)}g target)`;
+
+            const proteinRing = document.getElementById('fpProteinRing');
+            const carbsRing = document.getElementById('fpCarbsRing');
+            const fatsRing = document.getElementById('fpFatsRing');
+
+            proteinRing.style.setProperty('--ringValue', `${Math.round((proteinProgress / 100) * 360)}deg`);
+            carbsRing.style.setProperty('--ringValue', `${Math.round((carbsProgress / 100) * 360)}deg`);
+            fatsRing.style.setProperty('--ringValue', `${Math.round((fatsProgress / 100) * 360)}deg`);
+
+            proteinRing.textContent = `${roundNumber(proteinProgress)}%`;
+            carbsRing.textContent = `${roundNumber(carbsProgress)}%`;
+            fatsRing.textContent = `${roundNumber(fatsProgress)}%`;
+            updateMacroComparisonGraph(totals, proteinTarget, carbsTarget, fatsTarget);
+        }
+
+        function updateMacroComparisonGraph(totals, proteinTarget, carbsTarget, fatsTarget) {
+            const toGraphWidth = (value, target) => {
+                if (!target || target <= 0) return 0;
+                // Allow overflow visualization up to 140%
+                return Math.min(140, (value / target) * 100);
+            };
+
+            const proteinWidth = toGraphWidth(totals.protein, proteinTarget);
+            const carbsWidth = toGraphWidth(totals.carbs, carbsTarget);
+            const fatsWidth = toGraphWidth(totals.fats, fatsTarget);
+
+            document.getElementById('fpGraphProteinBar').style.width = `${proteinWidth}%`;
+            document.getElementById('fpGraphCarbsBar').style.width = `${carbsWidth}%`;
+            document.getElementById('fpGraphFatsBar').style.width = `${fatsWidth}%`;
+
+            document.getElementById('fpGraphProteinText').textContent = `${totals.protein.toFixed(1)} / ${proteinTarget.toFixed(0)} g`;
+            document.getElementById('fpGraphCarbsText').textContent = `${totals.carbs.toFixed(1)} / ${carbsTarget.toFixed(0)} g`;
+            document.getElementById('fpGraphFatsText').textContent = `${totals.fats.toFixed(1)} / ${fatsTarget.toFixed(0)} g`;
+            drawMacroCanvasChart(totals, proteinTarget, carbsTarget, fatsTarget);
+        }
+
+        function drawMacroCanvasChart(totals, proteinTarget, carbsTarget, fatsTarget) {
+            const canvas = document.getElementById('fpMacroCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const cssWidth = canvas.clientWidth || 360;
+            const cssHeight = canvas.clientHeight || 180;
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = Math.floor(cssWidth * dpr);
+            canvas.height = Math.floor(cssHeight * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const w = cssWidth;
+            const h = cssHeight;
+            ctx.clearRect(0, 0, w, h);
+
+            // background grid
+            ctx.strokeStyle = '#e5edf6';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 4; i++) {
+                const y = (h / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(35, y);
+                ctx.lineTo(w - 10, y);
+                ctx.stroke();
+            }
+
+            const data = [
+                { key: 'Protein', value: totals.protein, target: proteinTarget, color: '#16a34a' },
+                { key: 'Carbs', value: totals.carbs, target: carbsTarget, color: '#0284c7' },
+                { key: 'Fats', value: totals.fats, target: fatsTarget, color: '#d97706' },
+            ];
+
+            const maxVal = Math.max(
+                1,
+                ...data.map(d => d.target || 0),
+                ...data.map(d => d.value || 0)
+            );
+
+            const chartLeft = 48;
+            const chartRight = w - 14;
+            const chartBottom = h - 24;
+            const chartTop = 10;
+            const chartHeight = chartBottom - chartTop;
+            const slotWidth = (chartRight - chartLeft) / data.length;
+            const barWidth = Math.min(40, slotWidth * 0.45);
+
+            // axes
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.moveTo(chartLeft, chartTop);
+            ctx.lineTo(chartLeft, chartBottom);
+            ctx.lineTo(chartRight, chartBottom);
+            ctx.stroke();
+
+            ctx.font = '11px Segoe UI';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText('0', 30, chartBottom + 3);
+            ctx.fillText(String(Math.round(maxVal)), 14, chartTop + 4);
+
+            data.forEach((item, i) => {
+                const xCenter = chartLeft + slotWidth * i + slotWidth / 2;
+                const selectedH = (Math.max(0, item.value) / maxVal) * chartHeight;
+                const targetH = (Math.max(0, item.target) / maxVal) * chartHeight;
+
+                // target bar (light)
+                ctx.fillStyle = '#dbe7f4';
+                ctx.fillRect(xCenter - barWidth / 2, chartBottom - targetH, barWidth, targetH);
+
+                // selected overlay bar
+                ctx.fillStyle = item.color;
+                ctx.fillRect(xCenter - (barWidth / 2) + 5, chartBottom - selectedH, barWidth - 10, selectedH);
+
+                // value label
+                ctx.fillStyle = '#0f172a';
+                ctx.font = '700 11px Segoe UI';
+                ctx.fillText(Math.round(item.value).toString(), xCenter - 8, chartBottom - selectedH - 6);
+
+                // x labels
+                ctx.fillStyle = '#475569';
+                ctx.font = '11px Segoe UI';
+                ctx.fillText(item.key, xCenter - 18, chartBottom + 14);
+            });
+        }
+
+        function getSelectedAnimalType() {
+            return document.getElementById('fpAnimalType').value;
+        }
+
+        function addFoodItem() {
+            const input = document.getElementById('fpNewFoodInput');
+            const newName = (input.value || '').trim();
+            if (!newName) return;
+
+            const animalType = getSelectedAnimalType();
+            const foods = foodPlanFoodsByAnimal[animalType] || [];
+            if (foods.some(item => item.name.toLowerCase() === newName.toLowerCase())) {
+                showNotification('Food already exists in this list', 'warning');
+                return;
+            }
+
+            foods.push({
+                name: newName,
+                icon: 'fa-bowl-food',
+                serving: 'custom',
+                calories: 50,
+                protein: 2,
+                carbs: 6,
+                fats: 1
+            });
+            foodPlanFoodsByAnimal[animalType] = foods;
+            input.value = '';
+            calculateFoodPlan();
+        }
+
+        function editFoodItem(foodName) {
+            const animalType = getSelectedAnimalType();
+            const foods = foodPlanFoodsByAnimal[animalType] || [];
+            const item = foods.find(f => f.name === foodName);
+            if (!item) return;
+
+            const updated = prompt('Edit food name:', item.name);
+            if (updated === null) return;
+            const cleanName = updated.trim();
+            if (!cleanName) return;
+
+            const nameExists = foods.some(f => f.name.toLowerCase() === cleanName.toLowerCase() && f.name !== item.name);
+            if (nameExists) {
+                showNotification('Food with this name already exists', 'warning');
+                return;
+            }
+
+            const oldName = item.name;
+            item.name = cleanName;
+            markedFoods = markedFoods.map(name => (name === oldName ? cleanName : name));
+
+            const nutritionInput = prompt(
+                'Edit nutrition as calories,protein,carbs,fats (example: 120,8,15,3):',
+                `${item.calories || 0},${item.protein || 0},${item.carbs || 0},${item.fats || 0}`
+            );
+            if (nutritionInput) {
+                const parts = nutritionInput.split(',').map(v => Number(v.trim()));
+                if (parts.length === 4 && parts.every(v => !Number.isNaN(v))) {
+                    item.calories = parts[0];
+                    item.protein = parts[1];
+                    item.carbs = parts[2];
+                    item.fats = parts[3];
+                }
+            }
+
+            calculateFoodPlan();
+        }
+
+        function deleteFoodItem(foodName) {
+            const animalType = getSelectedAnimalType();
+            const foods = foodPlanFoodsByAnimal[animalType] || [];
+            foodPlanFoodsByAnimal[animalType] = foods.filter(item => item.name !== foodName);
+            markedFoods = markedFoods.filter(name => name !== foodName);
+            calculateFoodPlan();
+        }
+
+        function clearFoodMarks() {
+            markedFoods = [];
+            calculateFoodPlan();
+        }
 
         function loadPetsForWellness() {
             fetch('/api/get_pets')
@@ -546,8 +1573,9 @@
                 const monthName = now.toLocaleString('default', { month: 'short' });
 
                 let html = `
-                    <div class="text-center mb-2 fw-bold">${monthName} ${year}</div>
-                    <table class="table table-sm table-borderless text-center mb-0" style="font-size: 0.8rem;">
+                    <div class="mini-cal-wrap">
+                    <div class="mini-cal-month">${monthName} ${year}</div>
+                    <table class="mini-cal-table">
                         <thead>
                             <tr>
                                 <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
@@ -567,29 +1595,30 @@
                     }
                     
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    let cellClass = '';
-                    let dotHtml = '<div class="d-flex justify-content-center gap-1" style="height: 4px; margin-top: 1px;">';
+                    let dayClass = 'mini-cal-day';
+                    let dotHtml = '<div class="mini-cal-dots">';
                     
                     if (day === now.getDate()) {
-                        cellClass = 'bg-primary text-white rounded-circle';
+                        dayClass += ' today';
                     }
                     
                     if (historyDates.includes(dateStr)) {
-                        dotHtml += '<div style="width: 4px; height: 4px; background: #28a745; border-radius: 50%;"></div>';
+                        dotHtml += '<span class="mini-dot history"></span>';
                     }
                     if (reminderDates.includes(dateStr)) {
-                        dotHtml += '<div style="width: 4px; height: 4px; background: #ffc107; border-radius: 50%;"></div>';
+                        dotHtml += '<span class="mini-dot reminder"></span>';
                     }
                     dotHtml += '</div>';
 
-                    html += `<td class="p-1"><div class="${cellClass}" style="width: 24px; height: 24px; line-height: 24px; margin: 0 auto; cursor: pointer;" title="${dateStr}">${day}</div>${dotHtml}</td>`;
+                    html += `<td><div class="${dayClass}" title="${dateStr}">${day}</div>${dotHtml}</td>`;
                 }
 
                 html += '</tr></tbody></table>';
                 html += `
-                    <div class="mt-2 small d-flex justify-content-center gap-3">
-                        <span><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i> History</span>
-                        <span><i class="fas fa-circle text-warning me-1" style="font-size: 0.5rem;"></i> Reminders</span>
+                    <div class="mini-cal-legend">
+                        <span><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>History</span>
+                        <span><i class="fas fa-circle text-warning me-1" style="font-size: 0.5rem;"></i>Reminders</span>
+                    </div>
                     </div>
                 `;
                 calendar.innerHTML = html;

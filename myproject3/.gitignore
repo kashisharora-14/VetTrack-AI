@@ -10,6 +10,11 @@ __pycache__/
 dist/
 build/
 
+
+node_modules/
+.env
+dist/
+build/
 # ----------------------
 # Virtual environment
 # ----------------------

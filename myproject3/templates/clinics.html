@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Find Clinics - VetTrack AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .clinics-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .clinics-header {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .clinics-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .clinics-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .clinic-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            height: 280px;
+        }
+
+        .clinic-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .clinic-image {
+            width: 40%;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+
+        .clinic-content {
+            width: 60%;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .clinic-header-info {
+            margin-bottom: 12px;
+        }
+
+        .clinic-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .clinic-address {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin: 8px 0 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clinic-address i {
+            color: #667eea;
+        }
+
+        .clinic-META {
+            display: flex;
+            gap: 15px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .clinic-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            color: #f39c12;
+        }
+
+        .clinic-reviews {
+            color: #95a5a6;
+            font-size: 0.85rem;
+        }
+
+        .clinic-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .status-open {
+            background-color: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .status-closed {
+            background-color: #fadbd8;
+            color: #c0392b;
+        }
+
+        .clinic-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .clinic-actions button,
+        .clinic-actions a {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-call {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-call:hover {
+            background-color: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .btn-direction {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-direction:hover {
+            background-color: #229954;
+            transform: scale(1.05);
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link {
+            color: #667eea !important;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #764ba2 !important;
+            transform: translateY(-2px);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .clinic-card {
+            animation: slideUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .clinic-card:nth-child(1) { animation-delay: 0.1s; }
+        .clinic-card:nth-child(2) { animation-delay: 0.2s; }
+        .clinic-card:nth-child(3) { animation-delay: 0.3s; }
+        .clinic-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .clinic-card {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .clinic-image {
+                width: 100%;
+                height: 200px;
+            }
+
+            .clinic-content {
+                width: 100%;
+            }
+
+            .clinics-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{{ url_for('dashboard') }}">
+                <i class="fas fa-paw" style="color: #667eea; margin-right: 8px;"></i>VetTrack AI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('symptom') }}">Symptom Checker</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('clinics') }}">Find Clinics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="clinics-container">
+        <div class="clinics-header">
+            <h1>Find Nearby Clinics</h1>
+            <p>Professional veterinary care near you</p>
+        </div>
+
+        <!-- Clinics List -->
+        {% for clinic in clinics %}
+        <div class="clinic-card">
+            <div class="clinic-image">
+                {% if clinic.image %}
+                    <img src="{{ url_for('static', filename='uploads/' + clinic.image) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ clinic.name }}">
+                {% else %}
+                    <i class="fas fa-hospital"></i>
+                {% endif %}
+            </div>
+            <div class="clinic-content">
+                <div class="clinic-header-info">
+                    <h2 class="clinic-name">{{ clinic.name }}</h2>
+                    <p class="clinic-address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ clinic.address }}
+                    </p>
+                </div>
+
+                <div class="clinic-META">
+                    <div class="clinic-rating">
+                        <i class="fas fa-star"></i>
+                        {{ clinic.rating }} <span class="clinic-reviews">({{ clinic.review_count }} reviews)</span>
+                    </div>
+                    <div class="clinic-status {% if clinic.is_open %}status-open{% else %}status-closed{% endif %}">
+                        {% if clinic.is_open %}
+                            <i class="fas fa-circle" style="font-size: 0.6rem;"></i> Open Now
+                        {% else %}
+                            <i class="fas fa-circle" style="font-size: 0.6rem;"></i> Closed
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="clinic-actions">
+                    <a href="tel:{{ clinic.phone }}" class="btn-call">
+                        <i class="fas fa-phone"></i> Call
+                    </a>
+                    <a href="https://maps.google.com/?q={{ clinic.address | replace(' • ', '') }}" target="_blank" class="btn-direction">
+                        <i class="fas fa-directions"></i> Directions
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

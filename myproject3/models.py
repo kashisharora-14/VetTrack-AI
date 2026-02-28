@@ -27,6 +27,8 @@ class PetProfile(db.Model):
     species = db.Column(db.String(50), nullable=False)
     breed = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer, nullable=False)
+    weight_kg = db.Column(db.Float, nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
     medical_notes = db.Column(db.Text)
     profile_picture = db.Column(db.String(255), nullable=True)  # store filename
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -69,3 +71,48 @@ class Reminder(db.Model):
     completed = db.Column(db.Boolean, default=False)
     completed_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# Hardcoded Veterinary Clinics Data
+VETERINARY_CLINICS = [
+    {
+        'id': 1,
+        'name': 'The Paws Clinic & Spa',
+        'address': '98 Willow Creek Rd • 1.2 miles',
+        'phone': '+92 123-4567890',
+        'rating': 4.7,
+        'review_count': 89,
+        'is_open': True,
+        'image': 'clinic1.jpg'
+    },
+    {
+        'id': 2,
+        'name': 'City Veterinary Care',
+        'address': '432 Metro Plaza, Suite 4 • 2.5 miles',
+        'phone': '+92 123-4567891',
+        'rating': 4.9,
+        'review_count': 234,
+        'is_open': False,
+        'image': 'clinic2.jpg'
+    },
+    {
+        'id': 3,
+        'name': 'Healthy Tails 24/7',
+        'address': 'Emergency Lane, Medical District • 3.1 miles',
+        'phone': '+92 123-4567892',
+        'rating': 4.8,
+        'review_count': 342,
+        'is_open': True,
+        'image': 'clinic3.jpg'
+    },
+    {
+        'id': 4,
+        'name': 'Gentle Breeze Vet',
+        'address': '19 Oak Avenue • 3.8 miles',
+        'phone': '+92 123-4567893',
+        'rating': 4.6,
+        'review_count': 156,
+        'is_open': True,
+        'image': 'clinic4.jpg'
+    }
+]

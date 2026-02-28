@@ -8,8 +8,243 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        body.bg-light {
+            background: #f6f8fb !important;
+            color: #1f2d3d;
+        }
+        #customNavbar {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e8eef5;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .sidebar {
+            background: transparent !important;
+            border-right: 1px solid #e8eef5 !important;
+        }
+        .sidebar .card,
+        #noSelectionMessage .card,
+        #noHistoryMessage .card,
+        #historyContainer .card {
+            border: 1px solid #e7edf4 !important;
+            border-radius: 20px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04) !important;
+            background: rgba(255, 255, 255, 0.88);
+        }
+        .sidebar .card-header {
+            background: transparent !important;
+            color: #243447 !important;
+            border-bottom: 1px solid #edf2f8;
+        }
+        .sidebar .nav-link.active {
+            background: #eaf3fd !important;
+            color: #6fa8dc !important;
+        }
+        main .border-bottom {
+            border-color: #e8eef5 !important;
+        }
+        .feature-icon {
+            width: 64px !important;
+            height: 64px !important;
+            border-radius: 16px;
+            background: #e9f3fc !important;
+            color: #70a9db !important;
+        }
+        .btn-primary {
+            background: #8ebfe8;
+            border-color: #8ebfe8;
+        }
+        .btn-primary:hover {
+            background: #7fb2dd;
+            border-color: #7fb2dd;
+        }
+        .chart-wrap {
+            position: relative;
+            height: 230px;
+        }
+        .overview-layout .glass-chart-card {
+            height: 100%;
+        }
+        .panel-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            height: 100%;
+        }
+        .flow-panel {
+            border-radius: 22px;
+            border: 1px solid #e7edf4;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 252, 255, 0.9));
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+            padding: 16px;
+            min-height: 330px;
+            display: flex;
+            flex-direction: column;
+        }
+        .flow-canvas {
+            position: relative;
+            border-radius: 18px;
+            height: 220px;
+            background:
+                radial-gradient(circle at 25% 35%, rgba(138, 188, 232, 0.20) 0, rgba(138, 188, 232, 0) 38%),
+                radial-gradient(circle at 72% 62%, rgba(157, 223, 211, 0.22) 0, rgba(157, 223, 211, 0) 40%),
+                #f7faff;
+            border: 1px solid #ebf1f8;
+            overflow: hidden;
+        }
+        .flow-canvas::before,
+        .flow-canvas::after {
+            content: "";
+            position: absolute;
+            width: 160%;
+            left: -30%;
+            border-top: 8px solid rgba(148, 163, 184, 0.20);
+            border-radius: 50%;
+        }
+        .flow-canvas::before {
+            top: 40px;
+            height: 160px;
+            transform: rotate(-8deg);
+        }
+        .flow-canvas::after {
+            top: 86px;
+            height: 180px;
+            transform: rotate(9deg);
+        }
+        .flow-pill {
+            position: absolute;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #e7edf4;
+            padding: 6px 10px;
+            font-size: 0.73rem;
+            font-weight: 600;
+            color: #577089;
+        }
+        .flow-footer {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .flow-stat {
+            border-radius: 12px;
+            background: #f4f8fd;
+            border: 1px solid #e9f0f8;
+            padding: 8px;
+        }
+        .flow-stat-value {
+            font-size: 1rem;
+            line-height: 1;
+            font-weight: 700;
+            color: #31465d;
+        }
+        .flow-stat-label {
+            margin-top: 3px;
+            font-size: 0.69rem;
+            color: #8ea2b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+        }
+        .suggestion-card {
+            border-radius: 16px;
+            border: 1px solid #e8eef5;
+            background: #f9fbff;
+            padding: 10px 12px;
+        }
+        .suggestion-title {
+            color: #354c64;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+        .suggestion-sub {
+            color: #8ba1b7;
+            font-size: 0.75rem;
+        }
+        @media (max-width: 992px) {
+            .flow-footer {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        .chart-card .card-body {
+            padding: 12px 18px 16px 18px;
+        }
+        .chart-subtitle {
+            font-size: 0.78rem;
+            color: #93a4b7;
+            margin-top: 3px;
+        }
+        .glass-chart-card {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid #e7edf4;
+            border-radius: 22px;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .glass-chart-card .card-header {
+            background: transparent;
+            border-bottom: 0;
+            padding: 16px 18px 2px 18px;
+        }
+        .glass-chart-card .card-header h6 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .urgency-total {
+            font-size: 1.75rem;
+            line-height: 1;
+            font-weight: 700;
+            color: #23364a;
+            margin-bottom: 12px;
+        }
+        .urgency-total small {
+            font-size: 0.75rem;
+            color: #90a3b7;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        .urgency-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .urgency-row {
+            display: grid;
+            grid-template-columns: 56px 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        .urgency-label {
+            font-size: 0.73rem;
+            color: #8ba0b5;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+        }
+        .urgency-track {
+            height: 7px;
+            border-radius: 999px;
+            background: #edf3f9;
+            overflow: hidden;
+        }
+        .urgency-fill {
+            height: 100%;
+            border-radius: 999px;
+            width: 0;
+            transition: width 220ms ease;
+        }
+        .urgency-value {
+            font-size: 0.8rem;
+            color: #445a71;
+            font-weight: 700;
+            min-width: 22px;
+            text-align: right;
+        }
         .timeline {
             position: relative;
             padding: 20px 0;
@@ -33,9 +268,10 @@
             position: relative;
             width: 45%;
             padding: 20px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e8eef5;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
             transition: transform 0.3s ease;
         }
         .timeline-content:hover {
@@ -53,11 +289,11 @@
             left: 50%;
             width: 16px;
             height: 16px;
-            background: #29B6F6;
+            background: #8ebfe8;
             border: 4px solid #fff;
             border-radius: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 0 0 4px rgba(41, 182, 246, 0.2);
+            box-shadow: 0 0 0 4px rgba(142, 191, 232, 0.22);
             z-index: 1;
         }
         @media (max-width: 768px) {
@@ -204,24 +440,76 @@
 
                 <!-- Health Visualization -->
                 <div id="healthVisualization" style="display: none;">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="card-header bg-white py-3">
-                                    <h6 class="mb-0 fw-bold"><i class="fas fa-chart-line text-primary me-2"></i>Urgency Level Distribution</h6>
+                    <div id="overviewInsightsRow" class="row mb-4 overview-layout g-3">
+                        <div class="col-lg-3">
+                            <div class="panel-stack">
+                                <div id="urgencyPanel" class="card shadow-sm border-0 chart-card glass-chart-card">
+                                    <div class="card-header bg-white py-3">
+                                        <h6 class="mb-0 fw-bold">Urgency Distribution</h6>
+                                        <div class="chart-subtitle">Across health records</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="urgency-total" id="urgencyTotal">
+                                            0 <small>records</small>
+                                        </div>
+                                        <div id="urgencyList" class="urgency-list"></div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <canvas id="urgencyChart" height="200"></canvas>
+                                <div id="qualityPanel" class="card shadow-sm border-0 chart-card glass-chart-card">
+                                    <div class="card-header bg-white py-3">
+                                        <h6 class="mb-0 fw-bold">Record Quality</h6>
+                                        <div class="chart-subtitle">Data completeness insight</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="qualityInsight" class="suggestion-card">
+                                            <div class="suggestion-title">No quality insight yet</div>
+                                            <div class="suggestion-sub">Add records with notes to unlock insights.</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="card-header bg-white py-3">
-                                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-check text-success me-2"></i>Record Activity</h6>
+                        <div class="col-lg-6">
+                            <div id="flowPanel" class="flow-panel">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" style="color:#24384e;">Health Flow Overview</h6>
+                                        <div id="flowSubtitle" class="chart-subtitle">Recent pattern clusters and record mix</div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <canvas id="activityChart" height="200"></canvas>
+                                <div class="flow-canvas">
+                                    <div id="flowPills"></div>
+                                </div>
+                                <div class="flow-footer">
+                                    <div class="flow-stat">
+                                        <div class="flow-stat-value" id="summaryTotal">0</div>
+                                        <div class="flow-stat-label">Total</div>
+                                    </div>
+                                    <div class="flow-stat">
+                                        <div class="flow-stat-value" id="summaryHealth">0</div>
+                                        <div class="flow-stat-label">Health</div>
+                                    </div>
+                                    <div class="flow-stat">
+                                        <div class="flow-stat-value" id="summaryConsults">0</div>
+                                        <div class="flow-stat-label">Consults</div>
+                                    </div>
+                                    <div class="flow-stat">
+                                        <div class="flow-stat-value" id="summaryReminders">0</div>
+                                        <div class="flow-stat-label">Reminders</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="panel-stack">
+                                <div id="actionsPanel" class="card shadow-sm border-0 chart-card glass-chart-card">
+                                    <div class="card-header bg-white py-3">
+                                        <h6 class="mb-0 fw-bold">Suggested Actions</h6>
+                                        <div class="chart-subtitle">Based on recent history</div>
+                                    </div>
+                                    <div class="card-body pt-2">
+                                        <div id="actionItems"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -289,10 +577,18 @@
     <script>
         let currentPetId = null;
         let currentType = "reminder";
-        let urgencyChart = null;
-        let activityChart = null;
         let viewMode = 'cards';
         window.timelineData = [];
+        const cleanPalette = {
+            high: '#ff9ca8',
+            medium: '#ffd59e',
+            low: '#9ddfd3',
+            none: '#d8e3ef',
+            highStrong: '#f07f90',
+            mediumStrong: '#f1c37f',
+            lowStrong: '#79cbbb',
+            noneStrong: '#bfcfe0'
+        };
 
         document.addEventListener("DOMContentLoaded", () => {
             const petsList = document.getElementById("petsList");
@@ -401,51 +697,204 @@
             function updateCharts() {
                 const dataToAnalyze = window.timelineData || [];
                 const urgencyData = { 'High': 0, 'Medium': 0, 'Low': 0, 'None': 0 };
-                const activityData = {};
+                const overviewInsightsRow = document.getElementById('overviewInsightsRow');
+                const urgencyPanel = document.getElementById('urgencyPanel');
+                const qualityPanel = document.getElementById('qualityPanel');
+                const flowPanel = document.getElementById('flowPanel');
+                const actionsPanel = document.getElementById('actionsPanel');
+
+                function setVisible(el, visible) {
+                    if (!el) return;
+                    el.style.display = visible ? '' : 'none';
+                }
+
+                function normalizeUrgency(value) {
+                    const v = String(value || '').trim().toLowerCase();
+                    if (['high', 'critical', 'emergency', 'severe'].includes(v)) return 'High';
+                    if (['medium', 'moderate'].includes(v)) return 'Medium';
+                    if (['low', 'mild'].includes(v)) return 'Low';
+                    return 'None';
+                }
+
+                function hasMeaningfulNotes(record) {
+                    const fields = [record.summary, record.symptoms, record.title, record.notes, record.ai_advice, record.recommendation];
+                    return fields.some(v => String(v || '').trim().length > 0);
+                }
+
+                function isValidDate(d) {
+                    return d instanceof Date && !Number.isNaN(d.getTime());
+                }
+
+                if (!dataToAnalyze.length) {
+                    setVisible(overviewInsightsRow, false);
+                    return;
+                }
+
+                setVisible(overviewInsightsRow, true);
+                setVisible(flowPanel, true);
+                setVisible(qualityPanel, true);
+
+                const datedRecords = dataToAnalyze
+                    .map(r => ({ ...r, _date: new Date(r.date) }))
+                    .filter(r => isValidDate(r._date))
+                    .sort((a, b) => b._date - a._date);
+
+                const healthRecords = dataToAnalyze.filter(r => r.type === 'health');
+                const consultRecords = dataToAnalyze.filter(r => r.type === 'consultation');
+                const reminderRecords = dataToAnalyze.filter(r => r.type === 'reminder');
 
                 dataToAnalyze.forEach(r => {
                     // Urgency
                     if (r.type === 'health') {
-                        const level = r.urgency_level || 'None';
+                        const level = normalizeUrgency(r.urgency_level);
                         urgencyData[level] = (urgencyData[level] || 0) + 1;
                     }
                     
-                    // Activity by month
-                    const month = new Date(r.date).toLocaleString('default', { month: 'short', year: '2-digit' });
-                    activityData[month] = (activityData[month] || 0) + 1;
                 });
 
-                // Urgency Chart
-                if (urgencyChart) urgencyChart.destroy();
-                const uCtx = document.getElementById('urgencyChart').getContext('2d');
-                urgencyChart = new Chart(uCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(urgencyData),
-                        datasets: [{
-                            data: Object.values(urgencyData),
-                            backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#94a3b8']
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
+                const urgencyLabels = ['High', 'Medium', 'Low', 'None'];
+                const urgencyValues = urgencyLabels.map(l => urgencyData[l] || 0);
+                const urgencyTotal = urgencyValues.reduce((sum, v) => sum + v, 0);
+                const summaryTotal = document.getElementById('summaryTotal');
+                const summaryHealth = document.getElementById('summaryHealth');
+                const summaryConsults = document.getElementById('summaryConsults');
+                const summaryReminders = document.getElementById('summaryReminders');
+                if (summaryTotal) summaryTotal.textContent = String(dataToAnalyze.length);
+                if (summaryHealth) summaryHealth.textContent = String(healthRecords.length);
+                if (summaryConsults) summaryConsults.textContent = String(consultRecords.length);
+                if (summaryReminders) summaryReminders.textContent = String(reminderRecords.length);
 
-                // Activity Chart
-                if (activityChart) activityChart.destroy();
-                const aCtx = document.getElementById('activityChart').getContext('2d');
-                const months = Object.keys(activityData).slice(-6);
-                activityChart = new Chart(aCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: months,
-                        datasets: [{
-                            label: 'Records',
-                            data: months.map(m => activityData[m]),
-                            backgroundColor: '#29B6F6'
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
+                const flowSubtitle = document.getElementById('flowSubtitle');
+                if (flowSubtitle && datedRecords.length >= 2) {
+                    const from = datedRecords[datedRecords.length - 1]._date.toLocaleDateString();
+                    const to = datedRecords[0]._date.toLocaleDateString();
+                    flowSubtitle.textContent = `Record window: ${from} to ${to}`;
+                }
+                if (flowSubtitle && datedRecords.length < 2) {
+                    flowSubtitle.textContent = 'Limited history window';
+                }
+
+                const flowPills = document.getElementById('flowPills');
+                if (flowPills) {
+                    const today = new Date();
+                    const thirtyDaysAgo = new Date(today);
+                    thirtyDaysAgo.setDate(today.getDate() - 30);
+                    const recentHigh = healthRecords.filter(r => {
+                        const d = new Date(r.date);
+                        return isValidDate(d) && d >= thirtyDaysAgo && normalizeUrgency(r.urgency_level) === 'High';
+                    }).length;
+
+                    const pendingReminders = reminderRecords.filter(r => !r.completed).length;
+                    const latestConsult = consultRecords
+                        .map(r => new Date(r.date))
+                        .filter(isValidDate)
+                        .sort((a, b) => b - a)[0];
+
+                    const dominantUrgency = urgencyLabels.reduce((best, label) => (urgencyData[label] > urgencyData[best] ? label : best), 'None');
+                    const pills = [];
+                    if (recentHigh > 0) pills.push(`${recentHigh} high alerts (30d)`);
+                    if (pendingReminders > 0) pills.push(`${pendingReminders} pending reminders`);
+                    if (latestConsult) pills.push(`Last consult ${latestConsult.toLocaleDateString()}`);
+                    if (healthRecords.length > 0) pills.push(`Dominant risk: ${dominantUrgency}`);
+
+                    const positions = [
+                        'top:18px;left:20px;',
+                        'top:78px;right:18px;',
+                        'bottom:16px;left:42%;'
+                    ];
+                    const visiblePills = pills.slice(0, 3);
+                    flowPills.innerHTML = visiblePills.map((text, idx) => `<span class="flow-pill" style="${positions[idx]}">${text}</span>`).join('');
+                }
+
+                const urgencyTotalEl = document.getElementById('urgencyTotal');
+                if (urgencyTotalEl) {
+                    urgencyTotalEl.innerHTML = `${urgencyTotal} <small>records</small>`;
+                }
+                const urgencyList = document.getElementById('urgencyList');
+                setVisible(urgencyPanel, healthRecords.length > 0);
+                if (urgencyList && healthRecords.length > 0) {
+                    const fillColors = [cleanPalette.highStrong, cleanPalette.mediumStrong, cleanPalette.lowStrong, cleanPalette.noneStrong];
+                    urgencyList.innerHTML = urgencyLabels.map((label, idx) => {
+                        const value = urgencyValues[idx];
+                        const pct = urgencyTotal > 0 ? Math.round((value / urgencyTotal) * 100) : 0;
+                        return `
+                            <div class="urgency-row">
+                                <div class="urgency-label">${label}</div>
+                                <div class="urgency-track">
+                                    <div class="urgency-fill" style="width:${pct}%;background:${fillColors[idx]};"></div>
+                                </div>
+                                <div class="urgency-value">${value}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                const qualityInsight = document.getElementById('qualityInsight');
+                if (qualityInsight) {
+                    const withNotes = dataToAnalyze.filter(hasMeaningfulNotes).length;
+                    const pct = Math.round((withNotes / dataToAnalyze.length) * 100);
+                    const latestDate = datedRecords[0] ? datedRecords[0]._date.toLocaleDateString() : 'N/A';
+                    qualityInsight.innerHTML = `
+                        <div class="suggestion-title">${withNotes}/${dataToAnalyze.length} entries include notes (${pct}%)</div>
+                        <div class="suggestion-sub">Last update: ${latestDate}</div>
+                    `;
+                }
+
+                const actionItems = document.getElementById('actionItems');
+                if (actionItems) {
+                    const now = new Date();
+                    const sevenDaysAhead = new Date(now);
+                    sevenDaysAhead.setDate(now.getDate() + 7);
+                    const thirtyDaysAgo = new Date(now);
+                    thirtyDaysAgo.setDate(now.getDate() - 30);
+
+                    const recentHigh = healthRecords.filter(r => {
+                        const d = new Date(r.date);
+                        return isValidDate(d) && d >= thirtyDaysAgo && normalizeUrgency(r.urgency_level) === 'High';
+                    }).length;
+                    const overdueReminders = reminderRecords.filter(r => {
+                        const d = new Date(r.date);
+                        return isValidDate(d) && !r.completed && d < now;
+                    }).length;
+                    const upcomingReminders = reminderRecords.filter(r => {
+                        const d = new Date(r.date);
+                        return isValidDate(d) && !r.completed && d >= now && d <= sevenDaysAhead;
+                    }).length;
+
+                    const actions = [];
+                    if (recentHigh > 0) {
+                        actions.push({
+                            title: 'Prioritize veterinary follow-up',
+                            text: `${recentHigh} high-urgency health record(s) in the last 30 days.`
+                        });
+                    }
+                    if (overdueReminders > 0) {
+                        actions.push({
+                            title: 'Resolve overdue reminders',
+                            text: `${overdueReminders} reminder(s) are past due.`
+                        });
+                    }
+                    if (upcomingReminders > 0) {
+                        actions.push({
+                            title: 'Prepare upcoming care tasks',
+                            text: `${upcomingReminders} reminder(s) due within 7 days.`
+                        });
+                    }
+                    if (consultRecords.length === 0 && healthRecords.length >= 2) {
+                        actions.push({
+                            title: 'Book first consultation',
+                            text: 'Multiple health records exist without any consultation history.'
+                        });
+                    }
+
+                    setVisible(actionsPanel, actions.length > 0);
+                    actionItems.innerHTML = actions.slice(0, 3).map(a => `
+                        <div class="suggestion-card mb-2">
+                            <div class="suggestion-title">${a.title}</div>
+                            <div class="suggestion-sub">${a.text}</div>
+                        </div>
+                    `).join('');
+                }
             }
 
             function renderHistory() {

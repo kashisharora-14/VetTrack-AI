@@ -5,9 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=yes, maximum-scale=5.0">
     <title>VetTrack Ai - Comprehensive Pet Health Management</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locomotive-scroll@4.1.4/dist/locomotive-scroll.min.css">
 
     <style>
         :root {
+            --landing-nav-top: 0px;
+            --landing-nav-height: 68px;
             --soft-blue: #e9f2ff;
             --soft-blue-text: #2563eb;
             --soft-green: #e8f7ef;
@@ -20,6 +24,64 @@
             --soft-yellow-text: #d97706;
             --soft-info: #eef7ff;
             --soft-info-text: #0891b2;
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        body.intro-active {
+            overflow: hidden;
+        }
+
+        body.intro-active #customNavbar,
+        body.intro-active #landing-scroll {
+            opacity: 0;
+            pointer-events: none;
+            filter: blur(8px);
+        }
+
+        #customNavbar,
+        #landing-scroll {
+            transition: opacity 0.7s ease, filter 0.7s ease;
+        }
+
+        .intro-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            background: #000;
+            display: grid;
+            place-items: center;
+            opacity: 1;
+            transition: opacity 0.8s ease;
+        }
+
+        .intro-gate.is-fading {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-gate video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .intro-skip {
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(2, 6, 23, 0.35);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.5rem 0.95rem;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         /* card container */
@@ -93,13 +155,17 @@
         }
 
         .navbar {
-            background-color: rgba(255, 255, 255, 0.6) !important;
-            /* semi-transparent white */
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.22) 0%,
+                rgba(255, 255, 255, 0.1) 100%
+            ) !important;
             border-radius: 20px !important;
-            /* more rounded corners */
-            backdrop-filter: blur(8px);
-            /* optional: glassy blur effect */
-            transition: background-color 0.3s ease;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
+            transition: all 0.3s ease;
         }
 
         .highlight {
@@ -112,6 +178,20 @@
         .navbar-nav .nav-link {
             font-size: 1rem;
             font-weight: 500;
+        }
+
+        #customNavbar .navbar-brand,
+        #customNavbar .nav-link,
+        #customNavbar .dropdown-toggle {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            text-shadow: 0 2px 8px rgba(2, 6, 23, 0.45);
+        }
+
+        #customNavbar .dropdown-menu .dropdown-item {
+            color: #0f172a !important;
+            font-weight: 600;
+            text-shadow: none;
         }
 
         /* pastel backgrounds for icons */
@@ -146,19 +226,37 @@
         }
 
         #customNavbar {
-            background-color: rgba(255, 255, 255, 0.95) !important;
+            background: linear-gradient(
+                130deg,
+                rgba(255, 255, 255, 0.24) 0%,
+                rgba(255, 255, 255, 0.1) 100%
+            ) !important;
             border-radius: 20px !important;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(18px) saturate(180%);
+            -webkit-backdrop-filter: blur(18px) saturate(180%);
             transition: all 0.3s ease;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 34px rgba(15, 23, 42, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            position: fixed;
+            top: var(--landing-nav-top);
+            left: 0;
+            right: 0;
+            z-index: 1100;
+            margin: 0 !important;
+            border-radius: 0 0 16px 16px !important;
         }
 
         /* Enhanced navbar scroll effect */
         #customNavbar.scrolled {
-            background-color: rgba(255, 255, 255, 0.98) !important;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(25px);
+            background: linear-gradient(
+                130deg,
+                rgba(255, 255, 255, 0.28) 0%,
+                rgba(255, 255, 255, 0.14) 100%
+            ) !important;
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(22px) saturate(190%);
+            -webkit-backdrop-filter: blur(22px) saturate(190%);
+            border-color: rgba(255, 255, 255, 0.38);
         }
 
 
@@ -244,18 +342,351 @@
                 min-height: 250px;
             }
         }
+
+        .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-video-wrap {
+            margin: 1.5rem auto 0;
+            width: min(1080px, 96%);
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 20px 40px rgba(8, 24, 46, 0.3);
+        }
+
+        .hero-video-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(2, 6, 23, 0.12) 0%, rgba(2, 6, 23, 0.32) 100%);
+            pointer-events: none;
+        }
+
+        .hero-bg-video {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .hero-bg-video .hero-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-fullscreen {
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        .hero-motto {
+            font-family: "Cormorant Garamond", Georgia, serif;
+            font-weight: 700;
+            letter-spacing: 0.035em;
+            line-height: 1.08;
+            text-transform: uppercase;
+        }
+
+        .hero-motto-accent {
+            font-family: "Cormorant Garamond", Georgia, serif;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        .hero-content-lower {
+            min-height: calc(100vh - var(--landing-nav-height));
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            text-align: center;
+            padding-top: calc(var(--landing-nav-height) + 1rem);
+            padding-bottom: 9vh;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content-lower {
+                padding-bottom: 6vh;
+            }
+        }
+
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+
+        .about-media-video {
+            width: 100%;
+            max-width: 420px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 18px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+        }
+
+        .scroll-canvas-section {
+            position: relative;
+            height: calc(100vh - var(--landing-nav-height));
+            background: linear-gradient(180deg, #071229 0%, #0b1933 55%, #132b4f 100%);
+        }
+
+        .scroll-canvas-sticky {
+            position: sticky;
+            top: var(--landing-nav-height);
+            height: calc(100vh - var(--landing-nav-height));
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .scroll-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #071229 0%, #0b1933 55%, #132b4f 100%);
+        }
+
+        .scroll-motion-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .scroll-canvas-section.video-only .scroll-canvas-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - var(--landing-nav-height));
+        }
+
+        .scroll-canvas-copy {
+            position: absolute;
+            left: 2.2rem;
+            top: calc(var(--landing-nav-height) + 0.9rem);
+            transform: none;
+            text-align: left;
+            color: #fff;
+            z-index: 3;
+            padding: 0.75rem 0.95rem;
+            border-radius: 14px;
+            background: rgba(2, 6, 23, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            width: min(540px, calc(100% - 4rem));
+        }
+
+        .scroll-canvas-copy h3 {
+            margin: 0;
+            font-size: clamp(1rem, 1.8vw, 1.45rem);
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .scroll-canvas-copy p {
+            margin: 0.35rem 0 0;
+            font-size: clamp(0.86rem, 1.15vw, 0.98rem);
+            opacity: 0.94;
+        }
+
+        @media (max-width: 768px) {
+            .scroll-canvas-copy {
+                left: 1rem;
+                top: auto;
+                bottom: 1rem;
+                width: calc(100% - 2rem);
+            }
+        }
+
+        .pre-canvas-text-section {
+            position: relative;
+            height: 110vh;
+            background:
+                linear-gradient(180deg, rgba(2, 6, 23, 0.78) 0%, rgba(15, 23, 42, 0.86) 100%),
+                url("{{ url_for('static', filename='esv/0001.jpg') }}") center / cover no-repeat;
+        }
+
+        .pre-canvas-sticky {
+            position: sticky;
+            top: var(--landing-nav-height);
+            height: calc(100vh - var(--landing-nav-height));
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 0 1.2rem;
+        }
+
+        .pre-canvas-inner {
+            width: min(1100px, 100%);
+        }
+
+        .pre-canvas-panel {
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 24px;
+            padding: clamp(1.2rem, 2.6vw, 2.2rem) clamp(1rem, 3vw, 3rem);
+            background: linear-gradient(135deg, rgba(2, 6, 23, 0.42) 0%, rgba(15, 23, 42, 0.3) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 20px 46px rgba(2, 6, 23, 0.28);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pre-canvas-panel::before,
+        .pre-canvas-panel::after {
+            position: absolute;
+            color: rgba(103, 232, 249, 0.22);
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .pre-canvas-panel::before {
+            content: "\201C";
+            top: 0.2rem;
+            left: 0.9rem;
+        }
+
+        .pre-canvas-panel::after {
+            content: "\201D";
+            right: 1rem;
+            bottom: -0.5rem;
+        }
+
+        .scroll-text-line {
+            color: #e2e8f0;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            opacity: 0.15;
+            transform: translateY(28px);
+            margin: 0;
+        }
+
+        .scroll-text-line.line-1 {
+            font-size: clamp(1.35rem, 2.8vw, 2.5rem);
+            color: #67e8f9;
+        }
+
+        .scroll-text-line.line-2 {
+            font-size: clamp(2rem, 5.4vw, 5.2rem);
+            margin-top: 0.65rem;
+            color: #ffffff;
+            line-height: 1.02;
+        }
+
+        .scroll-text-line.line-3 {
+            font-size: clamp(1.1rem, 2.2vw, 2rem);
+            margin-top: 1rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .scroll-text-line.line-4 {
+            font-size: clamp(1.15rem, 2.4vw, 2.2rem);
+            margin-top: 1.2rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+
+        .pet-play-lab {
+            position: relative;
+            min-height: 78vh;
+            padding: 5rem 1rem;
+            background:
+                radial-gradient(circle at 25% 20%, rgba(34, 211, 238, 0.2) 0%, rgba(7, 10, 20, 0) 45%),
+                radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.22) 0%, rgba(7, 10, 20, 0) 42%),
+                linear-gradient(180deg, #050b18 0%, #030712 100%);
+            overflow: hidden;
+        }
+
+        .pet-play-lab .lab-inner {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+            color: #f8fafc;
+        }
+
+        .pet-play-lab h2 {
+            font-size: clamp(2rem, 4.8vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.02em;
+        }
+
+        .pet-play-lab p {
+            font-size: clamp(0.98rem, 1.5vw, 1.15rem);
+            color: rgba(226, 232, 240, 0.92);
+            margin: 0 auto 1.5rem;
+            max-width: 760px;
+        }
+
+        .pet-physics-area {
+            position: relative;
+            width: min(1120px, 96vw);
+            height: min(64vh, 600px);
+            margin: 1.4rem auto 0;
+            border-radius: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.26);
+            background: linear-gradient(165deg, rgba(15, 23, 42, 0.58) 0%, rgba(2, 6, 23, 0.82) 100%);
+            box-shadow: 0 22px 80px rgba(2, 6, 23, 0.58);
+            overflow: hidden;
+        }
+
+        .pet-pill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 1.05rem 1.75rem;
+            border-radius: 999px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            color: #0f172a;
+            font-size: 1.24rem;
+            user-select: none;
+            white-space: nowrap;
+            cursor: grab;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                0 14px 28px rgba(15, 23, 42, 0.34);
+            transform: translate(-50%, -50%);
+            will-change: transform;
+        }
+
+        .pet-pill:active {
+            cursor: grabbing;
+        }
+
+        .pet-pill .icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 
-<body>
+<body class="intro-active">
+    <div id="introGate" class="intro-gate">
+        <video id="introVideo" autoplay muted playsinline preload="auto">
+            <source src="{{ url_for('static', filename='intor.mp4') }}" type="video/mp4">
+        </video>
+        <button id="introSkipBtn" class="intro-skip" type="button">Skip</button>
+    </div>
     <!-- Navigation -->
-<nav id="customNavbar" class="navbar navbar-expand-lg navbar-light py-3 shadow-sm rounded">
+<nav id="customNavbar" class="navbar navbar-expand-lg navbar-light py-2 shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold fs-4" href="{{ url_for('index') }}">
-            <img src="{{ url_for('static', filename='paw.webp') }}" alt="VetTrack AI Logo" style="height: 50px; width: auto;">
             VetTrack AI
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -291,58 +722,36 @@
     </div>
 </nav>
 
+    <main id="landing-scroll" data-scroll-container>
 
 
     <!-- Hero Section -->
-    <section class="position-relative overflow-hidden">
-        <!-- Enhanced Animated Background -->
-        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 25%, #81D4FA 50%, #4FC3F7 75%, #29B6F6 100%); z-index: 1;"></div>
+    <section class="position-relative overflow-hidden hero-fullscreen" data-scroll-section>
+        <div class="hero-bg-video">
+            <video class="hero-video js-autoplay-video" autoplay muted loop playsinline preload="auto">
+                <source src="{{ url_for('static', filename='landing.mp4') }}" type="video/mp4">
+            </video>
+            <div class="hero-video-overlay"></div>
+        </div>
 
-        <!-- Enhanced Floating Elements with More Paws -->
-        <div class="position-absolute" style="top: 8%; left: 8%; z-index: 2;">
-            <i class="fa-solid fa-paw text-white opacity-30 pulse" style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
-        <div class="position-absolute" style="top: 15%; right: 12%; z-index: 2;">
-            <i class="fa-solid fa-paw text-pink opacity-25 pulse" style="font-size: 1.8rem; animation-delay: 0.3s; color: #FF69B4; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
+        <!-- Floating accent elements -->
         <div class="position-absolute" style="top: 25%; left: 15%; z-index: 2;">
             <i class="fa-solid fa-heart text-danger opacity-30 pulse" style="font-size: 1.6rem; animation-delay: 0.6s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
-        <div class="position-absolute" style="top: 35%; right: 8%; z-index: 2;">
-            <i class="fa-solid fa-paw text-success opacity-25 pulse" style="font-size: 2rem; animation-delay: 0.9s; color: #00C853; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
-        <div class="position-absolute" style="bottom: 35%; left: 12%; z-index: 2;">
-            <i class="fa-solid fa-paw text-warning opacity-30 pulse" style="font-size: 1.9rem; animation-delay: 1.2s; color: #FFA726; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
         </div>
         <div class="position-absolute" style="top: 50%; right: 20%; z-index: 2;">
             <i class="fa-solid fa- stethoscope text-info opacity-25 pulse" style="font-size: 1.4rem; animation-delay: 1.5s; color: #26C6DA; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
         </div>
-        <div class="position-absolute" style="bottom: 25%; right: 15%; z-index: 2;">
-            <i class="fa-solid fa-paw text-purple opacity-25 pulse" style="font-size: 1.7rem; animation-delay: 1.8s; color: #AB47BC; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
-        <div class="position-absolute" style="top: 70%; left: 25%; z-index: 2;">
-            <i class="fa-solid fa-paw text-indigo opacity-30 pulse" style="font-size: 1.5rem; animation-delay: 2.1s; color: #5C6BC0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
-        <div class="position-absolute" style="bottom: 45%; left: 5%; z-index: 2;">
-            <i class="fa-solid fa-paw text-teal opacity-25 pulse" style="font-size: 2.1rem; animation-delay: 2.4s; color: #26A69A; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
-        <div class="position-absolute" style="top: 45%; left: 35%; z-index: 2;">
-            <i class="fa-solid fa-paw text-orange opacity-20 pulse" style="font-size: 1.3rem; animation-delay: 2.7s; color: #FF7043; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));"></i>
-        </div>
 
-        <div class="container position-relative py-5" style="z-index: 3;">
-            <div class="text-center py-5">
+        <div class="container position-relative hero-content-lower" style="z-index: 3;">
+            <div class="w-100">
                 <div class="fade-in">
-                    <span class="badge px-4 py-3 rounded-pill mb-4" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); color: white; font-size: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                        <i class="fas fa-sparkles me-2"></i>Advanced AI-Powered Pet Care
-                    </span>
-                    <h1 class="display-4 fw-bold mb-4" style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                        Your reliable partner for pet <span style="background: linear-gradient(135deg, #FFD700 0%, #FF69B4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: none;">wellness</span>
+                    <h1 class="display-4 fw-bold mb-4">
+                        <span class="hero-motto" style="background: linear-gradient(135deg, #FFD700 0%, #FF69B4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"><span class="hero-motto-accent">LOVE THEM LIKE FAMILY</span> , PROTECT THEM  <BR> WITH INTELLIGENCE</span>
                     </h1>
-                    <p class="lead mb-5 mx-auto" style="max-width: 700px; color: rgba(255,255,255,0.95); font-size: 1.2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                    <!-- <p class="lead mb-5 mx-auto" style="max-width: 700px; color: rgba(255,255,255,0.95); font-size: 1.2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
                         At VetTrack AI, we prioritize the health and happiness of your beloved pets.
                         Our advanced AI technology and expert veterinary network provide comprehensive care solutions.
-                    </p>
+                    </p> -->
                     <div class="d-flex justify-content-center gap-4 mb-5">
                         <a href="#" onclick="checkAuthAndRedirect('/signup')" class="btn btn-lg px-5 py-3 fw-bold border-0 shadow-lg"
                            style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); border-radius: 50px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
@@ -354,34 +763,37 @@
                         </a>
                     </div>
 
-
-
-                    <!-- Pet Images with better spacing -->
-                    <div class="row g-4 mt-5 pt-4">
-                        <div class="col-md-4">
-                            <div class="rounded-4 overflow-hidden shadow-lg hover-scale">
-                                <img src="/static/dog1.jpg" alt="Happy Dog" class="img-fluid w-100" style="height: 280px; object-fit: cover;">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="rounded-4 overflow-hidden shadow-lg hover-scale">
-                                <img src="/static/dog2.jpg" alt="Cute Cat" class="img-fluid w-100" style="height: 280px; object-fit: cover;">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="rounded-4 overflow-hidden shadow-lg hover-scale">
-                                <img src="/static/dog3.jpg" alt="Pet Care" class="img-fluid w-100" style="height: 280px; object-fit: cover;">
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
             </div>
         </div>
     </section>
 
+    <section class="pre-canvas-text-section" data-scroll-section>
+        <div class="pre-canvas-sticky">
+            <div class="pre-canvas-inner pre-canvas-panel">
+                <p class="scroll-text-line line-1">Because they cannot tell you what hurts.</p>
+                <p class="scroll-text-line line-2">Care beyond words.</p>
+                <p class="scroll-text-line line-3">Every heartbeat matters.</p>
+                <p class="scroll-text-line line-4">Protect the love that protects you.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="scroll-canvas-section video-only" data-scroll-section>
+        <div class="scroll-canvas-sticky">
+            <video class="scroll-motion-video js-autoplay-video" autoplay muted loop playsinline preload="auto">
+                <source src="{{ url_for('static', filename='sad.mp4') }}" type="video/mp4">
+            </video>
+            <!-- <div class="scroll-canvas-copy">
+                 <h3>VetTrack in motion</h3>
+                <p>Real-time pet care visuals without scroll lag.</p> -->
+            <!-- </div>  -->
+        </div>
+    </section>
+
     <!-- Features Section -->
-    <section id="features" class="py-5 bg-surface">
+    <section id="features" class="py-5 bg-surface" data-scroll-section>
         <div class="container">
             <div class="text-center mb-5 fade-in">
                 <span class="badge bg-secondary-light text-secondary px-3 py-2 rounded-pill mb-3">
@@ -521,7 +933,7 @@
 
 
     <!-- About Section -->
-    <section id="about" class="py-5 bg-light">
+    <section id="about" class="py-5 bg-light" data-scroll-section>
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6">
@@ -538,10 +950,10 @@
                     </ul>
                 </div>
                 <div class="col-lg-6 text-center">
-                    <div class="about-image-placeholder bg-white rounded-4 p-5 shadow">
-                        <i class="fas fa-shield-heart display-1 text-primary mb-3"></i>
-                        <img src="{{ url_for('static', filename='herodog.webp') }}" alt=""
-                            style="height: 300px; width: auto;">
+                    <div class="about-image-placeholder rounded-4 p-0">
+                        <video class="about-media-video js-autoplay-video" autoplay muted loop playsinline controls preload="auto">
+                            <source src="{{ url_for('static', filename='landing.mp4') }}" type="video/mp4">
+                        </video>
                     </div>
                 </div>
             </div>
@@ -549,7 +961,7 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="py-5 position-relative overflow-hidden" style="background: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3f51b5 50%, #5c6bc0 75%, #7986cb 100%); min-height: 70vh; display: flex; align-items: center;">
+    <section class="py-5 position-relative overflow-hidden" data-scroll-section style="background: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3f51b5 50%, #5c6bc0 75%, #7986cb 100%); min-height: 70vh; display: flex; align-items: center;">
         <!-- Dark overlay for better contrast -->
         <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0, 0, 0, 0.3); z-index: 1;"></div>
 
@@ -603,8 +1015,16 @@
         </div>
     </section>
 
+    <section class="pet-play-lab" data-scroll-section>
+        <div class="lab-inner">
+            <h2>Playful Care Physics</h2>
+            <p>Paws, toys, treats, and wellness tags bounce with physics. Drag pills and toss them around.</p>
+            <div id="petPhysicsArea" class="pet-physics-area" aria-label="Interactive pet elements"></div>
+        </div>
+    </section>
+
     <!-- Footer -->
-    <footer class="bg-dark text-white py-5">
+    <footer class="bg-dark text-white py-5" data-scroll-section>
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4">
@@ -660,20 +1080,487 @@
             </div>
         </div>
     </footer>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/locomotive-scroll@4.1.4/dist/locomotive-scroll.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/bundled/lenis.min.js"></script>
     <script>
         window.onload = function () {
             window.scrollTo(0, 0);
         };
+
+        function initIntroGate() {
+            const gate = document.getElementById('introGate');
+            const video = document.getElementById('introVideo');
+            const skipBtn = document.getElementById('introSkipBtn');
+            if (!gate || !video) {
+                document.body.classList.remove('intro-active');
+                return;
+            }
+
+            const INTRO_KEY = 'vettrack_intro_seen';
+            let finished = false;
+
+            const finish = () => {
+                if (finished) return;
+                finished = true;
+                sessionStorage.setItem(INTRO_KEY, '1');
+                gate.classList.add('is-fading');
+                document.body.classList.remove('intro-active');
+                setTimeout(() => {
+                    if (gate && gate.parentNode) gate.parentNode.removeChild(gate);
+                }, 850);
+            };
+
+            if (sessionStorage.getItem(INTRO_KEY) === '1') {
+                finish();
+                return;
+            }
+
+            const tryPlay = () => {
+                video.muted = true;
+                video.defaultMuted = true;
+                video.playsInline = true;
+                const p = video.play();
+                if (p && typeof p.catch === 'function') p.catch(() => {});
+            };
+
+            video.addEventListener('ended', finish);
+            video.addEventListener('error', finish);
+            video.addEventListener('canplay', tryPlay, { once: true });
+            skipBtn?.addEventListener('click', finish);
+            tryPlay();
+
+            // Safety fallback in case media events don't fire.
+            setTimeout(finish, 15000);
+        }
+
+        function initLandingVideos() {
+            const videos = Array.from(document.querySelectorAll('video.js-autoplay-video'));
+            if (!videos.length) return;
+
+            const tryPlay = (video) => {
+                video.muted = true;
+                video.defaultMuted = true;
+                video.playsInline = true;
+                const p = video.play();
+                if (p && typeof p.catch === 'function') {
+                    p.catch(() => {});
+                }
+            };
+
+            videos.forEach((video) => {
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.preload = 'auto';
+                video.addEventListener('canplay', () => tryPlay(video), { once: true });
+                video.addEventListener('loadeddata', () => tryPlay(video), { once: true });
+                tryPlay(video);
+            });
+
+            const resumeAll = () => {
+                videos.forEach((video) => {
+                    if (video.paused) tryPlay(video);
+                });
+            };
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) resumeAll();
+            });
+
+            ['click', 'touchstart', 'keydown'].forEach((evt) => {
+                window.addEventListener(evt, resumeAll, { passive: true });
+            });
+        }
+
+        // Landing page only: GSAP + Lenis + Locomotive
+        document.addEventListener('DOMContentLoaded', function () {
+            initIntroGate();
+
+            const applyNavbarHeight = () => {
+                const navbar = document.getElementById('customNavbar');
+                if (!navbar) return;
+                const navHeight = Math.ceil(navbar.getBoundingClientRect().height || 68);
+                document.documentElement.style.setProperty('--landing-nav-height', `${navHeight}px`);
+            };
+            applyNavbarHeight();
+            window.addEventListener('resize', applyNavbarHeight);
+
+            const scrollContainer = document.querySelector('#landing-scroll');
+            let lenis = null;
+
+            // Keep Locomotive available on page, but avoid dual smooth-scroll engines for performance.
+            // Lenis drives the scroll tick events used by canvas/text sections.
+
+            if (window.Lenis) {
+                lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+                function raf(time) {
+                    lenis.raf(time);
+                    requestAnimationFrame(raf);
+                }
+                requestAnimationFrame(raf);
+                lenis.on('scroll', () => {
+                    window.dispatchEvent(new Event('landing:scrolltick'));
+                });
+            }
+
+            if (window.gsap) {
+                if (window.ScrollTrigger) {
+                    gsap.registerPlugin(ScrollTrigger);
+                }
+                gsap.to('.reveal-up', {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.85,
+                    ease: 'power3.out',
+                    stagger: 0.12
+                });
+            }
+
+            initLandingVideos();
+            initPreCanvasTextScroll();
+            // Canvas sequence disabled by request (video-only mode).
+            initToyPhysicsPills();
+        });
+
+        function initToyPhysicsPills() {
+            const holder = document.getElementById('petPhysicsArea');
+            if (!holder || !window.Matter) return;
+
+            const { Engine, Runner, Bodies, Composite, Mouse, MouseConstraint, Events } = Matter;
+            const engine = Engine.create({ gravity: { x: 0, y: 0.55 } });
+            const runner = Runner.create();
+            const pillBodies = [];
+            const walls = [];
+
+            const pillsData = [
+                { label: 'Paw Care', iconClass: 'fa-solid fa-paw' }, { label: 'Chew Toy', iconClass: 'fa-solid fa-bone' }, { label: 'Ball Time', iconClass: 'fa-solid fa-baseball' },
+                { label: 'Wellness', iconClass: 'fa-solid fa-heart-pulse' }, { label: 'Hydration', iconClass: 'fa-solid fa-droplet' }, { label: 'Treats', iconClass: 'fa-solid fa-cookie-bite' },
+                { label: 'Vet Check', iconClass: 'fa-solid fa-stethoscope' }, { label: 'Play Mode', iconClass: 'fa-solid fa-gamepad' }, { label: 'Happy Pet', iconClass: 'fa-solid fa-face-smile' },
+                { label: 'Strong Bones', iconClass: 'fa-solid fa-bone' }, { label: 'Energy', iconClass: 'fa-solid fa-bolt' }, { label: 'Love', iconClass: 'fa-solid fa-heart' }
+            ];
+            const pillThemes = [
+                { bg: 'linear-gradient(145deg, #ff3d6e 0%, #ff8a5b 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #00c6ff 0%, #0072ff 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #f7971e 0%, #ffd200 100%)', text: '#1f2937' },
+                { bg: 'linear-gradient(145deg, #56ab2f 0%, #a8e063 100%)', text: '#0f172a' },
+                { bg: 'linear-gradient(145deg, #7f00ff 0%, #e100ff 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #ff512f 0%, #dd2476 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #11998e 0%, #38ef7d 100%)', text: '#052e2b' },
+                { bg: 'linear-gradient(145deg, #396afc 0%, #2948ff 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #f953c6 0%, #b91d73 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #ff9966 0%, #ff5e62 100%)', text: '#ffffff' },
+                { bg: 'linear-gradient(145deg, #22c1c3 0%, #fdbb2d 100%)', text: '#0f172a' },
+                { bg: 'linear-gradient(145deg, #00b09b 0%, #96c93d 100%)', text: '#06241f' }
+            ];
+
+            const addWalls = (w, h) => {
+                walls.push(
+                    Bodies.rectangle(w / 2, -20, w, 40, { isStatic: true }),
+                    Bodies.rectangle(w / 2, h + 20, w, 40, { isStatic: true }),
+                    Bodies.rectangle(-20, h / 2, 40, h, { isStatic: true }),
+                    Bodies.rectangle(w + 20, h / 2, 40, h, { isStatic: true })
+                );
+                Composite.add(engine.world, walls);
+            };
+
+            const clearAll = () => {
+                pillBodies.forEach((item) => {
+                    Composite.remove(engine.world, item.body);
+                    item.el.remove();
+                });
+                pillBodies.length = 0;
+                walls.forEach((wall) => Composite.remove(engine.world, wall));
+                walls.length = 0;
+            };
+
+            const build = () => {
+                clearAll();
+                const w = holder.clientWidth;
+                const h = holder.clientHeight;
+                addWalls(w, h);
+
+                pillsData.forEach((pill, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'pet-pill';
+                    el.innerHTML = `<span class="icon"><i class="${pill.iconClass}"></i></span><span>${pill.label}</span>`;
+                    const theme = pillThemes[i % pillThemes.length];
+                    el.style.setProperty('background', theme.bg, 'important');
+                    el.style.setProperty('color', theme.text, 'important');
+                    el.style.setProperty('border-color', 'rgba(255,255,255,0.92)', 'important');
+                    holder.appendChild(el);
+                    const pw = Math.max(210, el.offsetWidth + 30);
+                    const ph = Math.max(78, el.offsetHeight + 18);
+
+                    const body = Bodies.rectangle(
+                        120 + (i % 4) * (w / 4.6),
+                        70 + Math.floor(i / 4) * 86,
+                        pw,
+                        ph,
+                        {
+                            restitution: 0.74,
+                            frictionAir: 0.02,
+                            density: 0.0015,
+                            chamfer: { radius: ph / 2 }
+                        }
+                    );
+                    Composite.add(engine.world, body);
+                    pillBodies.push({ el, body });
+                });
+            };
+
+            build();
+
+            const mouse = Mouse.create(holder);
+            const mouseConstraint = MouseConstraint.create(engine, {
+                mouse,
+                constraint: {
+                    stiffness: 0.18,
+                    damping: 0.28,
+                    render: { visible: false }
+                }
+            });
+            Composite.add(engine.world, mouseConstraint);
+
+            Events.on(engine, 'beforeUpdate', () => {
+                const t = performance.now() * 0.001;
+                pillBodies.forEach((item, i) => {
+                    Matter.Body.applyForce(item.body, item.body.position, {
+                        x: Math.sin(t + i * 0.52) * 0.00016,
+                        y: 0
+                    });
+                });
+            });
+
+            Runner.run(runner, engine);
+
+            const renderLoop = () => {
+                pillBodies.forEach(({ el, body }) => {
+                    el.style.transform = `translate(${body.position.x}px, ${body.position.y}px) rotate(${body.angle}rad)`;
+                });
+                requestAnimationFrame(renderLoop);
+            };
+            requestAnimationFrame(renderLoop);
+
+            window.addEventListener('resize', build);
+        }
+
+        function initPreCanvasTextScroll() {
+            const section = document.querySelector('.pre-canvas-text-section');
+            if (!section) return;
+            const line1 = section.querySelector('.scroll-text-line.line-1');
+            const line2 = section.querySelector('.scroll-text-line.line-2');
+            const line3 = section.querySelector('.scroll-text-line.line-3');
+            const line4 = section.querySelector('.scroll-text-line.line-4');
+            if (!line1 || !line2 || !line3 || !line4) return;
+
+            const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+            const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+            const mapProgress = (p, start, end) => clamp((p - start) / (end - start), 0, 1);
+
+            const applyLine = (el, p, inStart, inEnd, outStart, outEnd) => {
+                const inP = easeOut(mapProgress(p, inStart, inEnd));
+                const outP = mapProgress(p, outStart, outEnd);
+                const opacity = clamp((0.18 + inP * 0.82) * (1 - outP * 0.75), 0.12, 1);
+                const y = 28 - inP * 28 - outP * 8;
+                el.style.opacity = opacity.toFixed(3);
+                el.style.transform = `translateY(${y.toFixed(1)}px)`;
+            };
+
+            const update = () => {
+                const rect = section.getBoundingClientRect();
+                const maxScroll = Math.max(1, section.offsetHeight - window.innerHeight);
+                const progress = maxScroll > 0 ? clamp(-rect.top / maxScroll, 0, 1) : 0;
+
+                applyLine(line1, progress, 0.04, 0.28, 0.78, 1.0);
+                applyLine(line2, progress, 0.22, 0.5, 0.82, 1.0);
+                applyLine(line3, progress, 0.42, 0.72, 0.86, 1.0);
+                applyLine(line4, progress, 0.62, 0.9, 0.9, 1.0);
+            };
+            window.addEventListener('scroll', update, { passive: true });
+            window.addEventListener('landing:scrolltick', update);
+            window.addEventListener('resize', update);
+            update();
+        }
+
+        function initScrollCanvasVideo() {
+            const section = document.querySelector('.scroll-canvas-section');
+            const canvas = document.getElementById('scrollVideoCanvas');
+            if (!section || !canvas) return;
+
+            const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+            let currentFrame = 0;
+            const frameCount = 192;
+            const frameStep = 2;
+            const frameCache = new Map();
+            const loadingFrames = new Set();
+            let lastFrameDrawn = -1;
+            const loadedFrameSet = new Set();
+            let rafPending = false;
+            let lastDrawTs = 0;
+
+            const frameUrls = Array.from({ length: frameCount }, (_, i) => {
+                const num = String(i + 1).padStart(4, '0');
+                return `{{ url_for('static', filename='esv/') }}${num}.jpg`;
+            });
+
+            const resizeCanvas = () => {
+                const dpr = Math.min(1, window.devicePixelRatio || 1);
+                const sticky = section.querySelector('.scroll-canvas-sticky');
+                const rect = sticky ? sticky.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+                const cssW = Math.max(1, Math.floor(rect.width || window.innerWidth));
+                const cssH = Math.max(1, Math.floor(rect.height || window.innerHeight));
+
+                canvas.width = Math.floor(cssW * dpr);
+                canvas.height = Math.floor(cssH * dpr);
+                canvas.style.width = `${cssW}px`;
+                canvas.style.height = `${cssH}px`;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                drawFrame(currentFrame);
+            };
+
+            const drawFrame = (frameIndex) => {
+                const image = frameCache.get(frameIndex);
+                if (!image || !image.complete) return;
+                if (Math.abs(frameIndex - lastFrameDrawn) <= frameStep / 2) return;
+                const cw = Math.max(1, canvas.clientWidth || window.innerWidth);
+                const ch = Math.max(1, canvas.clientHeight || window.innerHeight);
+                const vw = image.naturalWidth || cw;
+                const vh = image.naturalHeight || ch;
+
+                const scale = Math.max(cw / vw, ch / vh);
+                const w = vw * scale;
+                const h = vh * scale;
+                const x = (cw - w) / 2;
+                const y = (ch - h) / 2;
+
+                ctx.clearRect(0, 0, cw, ch);
+                ctx.drawImage(image, x, y, w, h);
+                lastFrameDrawn = frameIndex;
+            };
+
+            const ensureFrame = (index) => {
+                if (index < 0 || index >= frameCount) return null;
+                if (frameCache.has(index)) return frameCache.get(index);
+                if (loadingFrames.has(index)) return null;
+
+                loadingFrames.add(index);
+                const img = new Image();
+                img.decoding = 'async';
+                img.src = frameUrls[index];
+                img.onload = () => {
+                    loadingFrames.delete(index);
+                    loadedFrameSet.add(index);
+                    frameCache.set(index, img);
+                    if (index === currentFrame) drawFrame(index);
+                };
+                img.onerror = () => {
+                    loadingFrames.delete(index);
+                };
+                frameCache.set(index, img);
+                return img;
+            };
+
+            const drawNearestLoadedFrame = (targetIndex) => {
+                if (loadedFrameSet.has(targetIndex)) {
+                    drawFrame(targetIndex);
+                    return;
+                }
+
+                // Search nearest loaded frame in a small window to keep work cheap.
+                for (let radius = 1; radius <= 18; radius++) {
+                    const left = targetIndex - radius * frameStep;
+                    const right = targetIndex + radius * frameStep;
+                    if (left >= 0 && loadedFrameSet.has(left)) {
+                        drawFrame(left);
+                        return;
+                    }
+                    if (right < frameCount && loadedFrameSet.has(right)) {
+                        drawFrame(right);
+                        return;
+                    }
+                }
+            };
+
+            const updateFromScroll = () => {
+                const rect = section.getBoundingClientRect();
+                const sticky = section.querySelector('.scroll-canvas-sticky');
+                const stickyHeight = sticky ? sticky.offsetHeight : window.innerHeight;
+                const maxScroll = Math.max(1, section.offsetHeight - stickyHeight);
+                if (maxScroll <= 0) return;
+                const now = performance.now();
+                if (now - lastDrawTs < 30) return;
+                lastDrawTs = now;
+
+                const rawProgress = Math.min(1, Math.max(0, (-rect.top + stickyHeight * 0.08) / maxScroll));
+                const progress = Math.pow(rawProgress, 1.12);
+                const steppedMax = Math.floor((frameCount - 1) / frameStep);
+                const targetFrame = Math.min(frameCount - 1, Math.floor(progress * steppedMax) * frameStep);
+                currentFrame = targetFrame;
+
+                // Load only the nearby window around current frame.
+                for (let i = -6; i <= 6; i++) ensureFrame(targetFrame + i * frameStep);
+                if (targetFrame !== lastFrameDrawn) drawNearestLoadedFrame(targetFrame);
+            };
+
+            const scheduleUpdate = () => {
+                if (rafPending) return;
+                rafPending = true;
+                requestAnimationFrame(() => {
+                    rafPending = false;
+                    updateFromScroll();
+                });
+            };
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                scheduleUpdate();
+            });
+            window.addEventListener('landing:scrolltick', scheduleUpdate);
+            window.addEventListener('scroll', scheduleUpdate, { passive: true });
+            ensureFrame(0);
+            for (let i = 1; i <= 6; i++) ensureFrame(i * frameStep);
+
+            // Gradually warm remaining stepped frames in idle time.
+            const steppedFrames = [];
+            for (let i = 0; i < frameCount; i += frameStep) steppedFrames.push(i);
+            let preloadPtr = 0;
+            const idleWarm = (deadline) => {
+                while (preloadPtr < steppedFrames.length &&
+                    ((deadline && deadline.timeRemaining && deadline.timeRemaining() > 5) || (deadline && deadline.didTimeout))) {
+                    ensureFrame(steppedFrames[preloadPtr]);
+                    preloadPtr += 1;
+                }
+                if (preloadPtr < steppedFrames.length) {
+                    if ('requestIdleCallback' in window) {
+                        window.requestIdleCallback(idleWarm, { timeout: 180 });
+                    } else {
+                        setTimeout(() => idleWarm({ didTimeout: true, timeRemaining: () => 0 }), 120);
+                    }
+                }
+            };
+
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(idleWarm, { timeout: 180 });
+            } else {
+                setTimeout(() => idleWarm({ didTimeout: true, timeRemaining: () => 0 }), 160);
+            }
+
+            resizeCanvas();
+            scheduleUpdate();
+            setTimeout(scheduleUpdate, 250);
+            setTimeout(scheduleUpdate, 700);
+        }
 
         // Enhanced navbar scroll effect
         window.addEventListener('scroll', function() {
             const navbar = document.getElementById('customNavbar');
             if (window.scrollY > 50) {
                 navbar.classList.add('scrolled');
-                navbar.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
             } else {
                 navbar.classList.remove('scrolled');
-                navbar.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
             }
         });
 
@@ -749,7 +1636,7 @@
     <script>
         function checkAuthAndRedirect(targetUrl) {
             // Check if user is logged in by looking for user data in the template
-            const isLoggedIn = {{ 'true' if user else 'false' }};
+            const isLoggedIn = {{ (user is not none)|tojson }};
 
             if (isLoggedIn) {
                 // User is logged in, redirect to the target page
@@ -789,3 +1676,5 @@
 </body>
 
 </html>
+
+

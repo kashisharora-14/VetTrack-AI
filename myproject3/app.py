@@ -14,6 +14,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import inspect, text
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 import base64
@@ -22,9 +23,9 @@ from dotenv import load_dotenv
 
 # Support both package and script execution contexts
 try:
-    from .models import db, User, PetProfile, HealthHistory, Reminder, Consultation
+    from .models import db, User, PetProfile, HealthHistory, Reminder, Consultation, VETERINARY_CLINICS
 except ImportError:  # when run as a script (python app.py)
-    from models import db, User, PetProfile, HealthHistory, Reminder, Consultation
+    from models import db, User, PetProfile, HealthHistory, Reminder, Consultation, VETERINARY_CLINICS
 
 try:
     from .gemini import (
@@ -94,6 +95,14 @@ db.init_app(app)
 # Ensure tables exist without deleting existing data
 with app.app_context():
     db.create_all()
+    inspector = inspect(db.engine)
+    if inspector.has_table("pet_profile"):
+        pet_columns = {col["name"] for col in inspector.get_columns("pet_profile")}
+        with db.engine.begin() as conn:
+            if "weight_kg" not in pet_columns:
+                conn.execute(text("ALTER TABLE pet_profile ADD COLUMN weight_kg FLOAT"))
+            if "gender" not in pet_columns:
+                conn.execute(text("ALTER TABLE pet_profile ADD COLUMN gender VARCHAR(20)"))
 
 
 # =====================
@@ -338,6 +347,14 @@ def wellness():
     return render_template('wellness.html')
 
 
+@app.route('/clinics')
+def clinics():
+    if 'user_id' not in session:
+        flash("Please log in to find nearby clinics", "warning")
+        return redirect(url_for("login"))
+    return render_template('clinics.html', clinics=VETERINARY_CLINICS)
+
+
 # @app.route('/consultation/<pet_id>')
 # def consultation(pet_id):
 #     pet = PetProfile.query.get_or_404(pet_id)
@@ -537,6 +554,8 @@ def add_pet():
             species=data['species'],
             breed=data['breed'],
             age=int(data['age']),
+            weight_kg=float(data['weight_kg']) if data.get('weight_kg') not in [None, '', 'null'] else None,
+            gender=data.get('gender') or None,
             medical_notes=data.get('medical_notes', ''),
             profile_picture=profile_picture_filename
         )
@@ -549,6 +568,8 @@ def add_pet():
             'species': pet.species,
             'breed': pet.breed,
             'age': pet.age,
+            'weight_kg': pet.weight_kg,
+            'gender': pet.gender,
             'medical_notes': pet.medical_notes,
             'profile_picture': pet.profile_picture
         }})
@@ -576,7 +597,8 @@ def consultation(pet_id):
         pet=pet,
         consultation=consultation,
         room_id=room_id,
-        geoapify_key=os.environ.get("GEOAPIFY_API_KEY", "")
+        geoapify_key=os.environ.get("GEOAPIFY_API_KEY", ""),
+        clinics=VETERINARY_CLINICS
     )
 
 
@@ -593,6 +615,8 @@ def get_pets():
         'species': pet.species,
         'breed': pet.breed,
         'age': pet.age,
+        'weight_kg': pet.weight_kg,
+        'gender': pet.gender,
         'medical_notes': pet.medical_notes,
         'profile_picture': pet.profile_picture
     } for pet in pets]
@@ -705,6 +729,169 @@ def check_symptoms():
 
     except Exception as e:
         logging.error(f"Error checking symptoms: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@app.route('/api/save_assessment', methods=['POST'])
+def save_assessment():
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'User not logged in'}), 401
+
+        data = request.get_json() or {}
+        pet_id = data.get('pet_id')
+        symptoms = (data.get('symptoms') or '').strip()
+        analysis = data.get('analysis') or {}
+
+        if not pet_id:
+            return jsonify({'success': False, 'error': 'Pet ID required'}), 400
+
+        pet = PetProfile.query.filter_by(id=pet_id, user_id=session['user_id']).first()
+        if not pet:
+            return jsonify({'success': False, 'error': 'Pet not found'}), 404
+
+        diagnosis = analysis.get('diagnosis', [])
+        if isinstance(diagnosis, str):
+            diagnosis = [diagnosis]
+        elif not isinstance(diagnosis, list):
+            diagnosis = []
+
+        possible_causes = analysis.get('possible_causes', [])
+        if isinstance(possible_causes, str):
+            possible_causes = [possible_causes]
+        elif not isinstance(possible_causes, list):
+            possible_causes = []
+
+        history_entry = HealthHistory(
+            pet_id=pet.id,
+            date=datetime.utcnow(),
+            symptoms=symptoms or "Saved final assessment summary",
+            diagnosis=json.dumps(diagnosis),
+            recommendation=analysis.get('recommendation', "Please consult with a veterinarian"),
+            urgency_level=analysis.get('urgency_level', "Unknown"),
+            possible_causes=json.dumps(possible_causes) if possible_causes else None
+        )
+        db.session.add(history_entry)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Assessment saved to health records'})
+    except Exception as e:
+        logging.error(f"Error saving assessment: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@app.route('/api/export_assessment_pdf', methods=['POST'])
+def export_assessment_pdf():
+    try:
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'User not logged in'}), 401
+
+        data = request.get_json() or {}
+        pet_id = data.get('pet_id')
+        symptoms = (data.get('symptoms') or '').strip()
+        analysis = data.get('analysis') or {}
+
+        if not pet_id:
+            return jsonify({'success': False, 'error': 'Pet ID required'}), 400
+
+        pet = PetProfile.query.filter_by(id=pet_id, user_id=session['user_id']).first()
+        if not pet:
+            return jsonify({'success': False, 'error': 'Pet not found'}), 404
+
+        diagnosis = analysis.get('diagnosis', [])
+        if isinstance(diagnosis, str):
+            diagnosis = [diagnosis]
+        elif not isinstance(diagnosis, list):
+            diagnosis = []
+
+        possible_causes = analysis.get('possible_causes', [])
+        if isinstance(possible_causes, str):
+            possible_causes = [possible_causes]
+        elif not isinstance(possible_causes, list):
+            possible_causes = []
+
+        home_care = analysis.get('home_care', [])
+        if isinstance(home_care, str):
+            home_care = [home_care]
+        elif not isinstance(home_care, list):
+            home_care = []
+
+        red_flags = analysis.get('red_flags', [])
+        if isinstance(red_flags, str):
+            red_flags = [red_flags]
+        elif not isinstance(red_flags, list):
+            red_flags = []
+
+        monitor_items = analysis.get('monitor_items', [])
+        if isinstance(monitor_items, str):
+            monitor_items = [monitor_items]
+        elif not isinstance(monitor_items, list):
+            monitor_items = []
+
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        y = height - 50
+
+        def write_line(text, font="Helvetica", size=10, gap=14):
+            nonlocal y
+            if y < 60:
+                pdf.showPage()
+                y = height - 50
+            pdf.setFont(font, size)
+            pdf.drawString(50, y, str(text))
+            y -= gap
+
+        write_line("VetTrack AI - Assessment Summary", "Helvetica-Bold", 16, 22)
+        write_line(f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
+        write_line(f"Pet: {pet.name} | {pet.species or '-'} | {pet.breed or '-'} | Age: {pet.age or 'N/A'}")
+        write_line(f"Urgency: {analysis.get('urgency_level', 'Unknown')}", "Helvetica-Bold", 11, 18)
+        write_line("")
+        write_line("Symptoms Submitted:", "Helvetica-Bold", 11, 16)
+        write_line(symptoms or "Not provided")
+        write_line("")
+        write_line("Preliminary Diagnosis:", "Helvetica-Bold", 11, 16)
+        for item in (diagnosis or ["Not available"]):
+            write_line(f"- {item}")
+        write_line("")
+        write_line("Possible Causes:", "Helvetica-Bold", 11, 16)
+        for item in (possible_causes or ["Not available"]):
+            write_line(f"- {item}")
+        write_line("")
+        write_line("Recommendations:", "Helvetica-Bold", 11, 16)
+        write_line(analysis.get('recommendation', 'Not available'))
+
+        if home_care:
+            write_line("")
+            write_line("Home Care:", "Helvetica-Bold", 11, 16)
+            for item in home_care:
+                write_line(f"- {item}")
+
+        if monitor_items:
+            write_line("")
+            write_line("What To Monitor:", "Helvetica-Bold", 11, 16)
+            for item in monitor_items:
+                write_line(f"- {item}")
+
+        if red_flags:
+            write_line("")
+            write_line("Red Flags:", "Helvetica-Bold", 11, 16)
+            for item in red_flags:
+                write_line(f"- {item}")
+
+        pdf.showPage()
+        pdf.save()
+        buffer.seek(0)
+
+        safe_name = "".join(ch for ch in (pet.name or "pet") if ch.isalnum() or ch in ("-", "_")).strip() or "pet"
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f"{safe_name}_assessment_summary.pdf",
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        logging.error(f"Error exporting assessment PDF: {e}")
         return jsonify({'success': False, 'error': str(e)}), 400
 
 from datetime import datetime, timedelta
@@ -947,26 +1134,54 @@ def upload_image():
             analysis.get("condition_likelihood")
             or analysis.get("conditionLikelihood")
             or "Unknown"
-      )
+        )
 
         warning_item = ""
+        image_match = True
+        image_result_status = "available"
 
-        # Check if diagnosis mentions species mismatch or wrong animal
-        if any("not a dog" in d.lower() or "different species" in d.lower() for d in analysis.get("diagnosis", [])):
-            warning_item = "⚠ The uploaded image does not appear to match your pet (species mismatch)."
-        
-        # Build response (⚡ alias severity = urgency_level)
+        diagnosis_list = analysis.get("diagnosis", [])
+        if isinstance(diagnosis_list, str):
+            diagnosis_list = [diagnosis_list]
+        possible_causes_list = analysis.get("possible_causes", [])
+        if isinstance(possible_causes_list, str):
+            possible_causes_list = [possible_causes_list]
+
+        mismatch_keywords = [
+            "species mismatch",
+            "different species",
+            "different animal",
+            "wrong pet",
+            "not this pet",
+            "not matching pet",
+            "not a dog",
+            "not a cat",
+            "cannot confirm pet identity",
+            "unrelated image",
+        ]
+        analysis_text = " ".join(
+            [str(x) for x in diagnosis_list + possible_causes_list + [analysis.get("recommendation", "")]]
+        ).lower()
+        if any(keyword in analysis_text for keyword in mismatch_keywords):
+            image_match = False
+            image_result_status = "not_available"
+            warning_item = "Warning: Uploaded image does not match the selected pet profile."
+            diagnosis_list = []
+            possible_causes_list = []
+            condition_likelihood = "Not available"
+
         response_data = {
-            "diagnosis": analysis.get("diagnosis", []),
-            "urgency_level": analysis.get("urgency_level", "Not Assessed"),
-            "severity": analysis.get("urgency_level", "Not Assessed"),  # 👈 alias
-            "possible_causes": analysis.get("possible_causes", []),   # ✅ fixed
-            "recommendation": analysis.get("recommendation", "No recommendation"),
-             "conditionLikelihood": condition_likelihood,   # camelCase
-             "condition_likelihood": condition_likelihood,   # snake_case
-             "warningItem": warning_item
+            "diagnosis": diagnosis_list,
+            "urgency_level": analysis.get("urgency_level", "Not Assessed") if image_match else "Not Assessed",
+            "severity": analysis.get("urgency_level", "Not Assessed") if image_match else "Not Assessed",
+            "possible_causes": possible_causes_list,
+            "recommendation": analysis.get("recommendation", "No recommendation") if image_match else "Image-based result not available due to pet-image mismatch.",
+            "conditionLikelihood": condition_likelihood,
+            "condition_likelihood": condition_likelihood,
+            "warningItem": warning_item,
+            "image_match": image_match,
+            "image_result_status": image_result_status,
         }
-
         return jsonify({
             'success': True,
             'analysis': response_data,
@@ -1131,3 +1346,4 @@ def create_health_history_entry(pet_id, description, analysis, filename):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
